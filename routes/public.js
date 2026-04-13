@@ -1,5 +1,5 @@
 import express from 'express';
-import prisma from "../src/prisma/prisma.js";
+import prisma from "../src/lib/prisma.js";
 import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken';
 
@@ -44,7 +44,7 @@ router.post('/login', async (req, res) => {
     res.status(200).json(token);
 
   }catch (err) {
-    res.status(500).json({ message: 'Erro ao fazer login' });
+    res.status(500).json({ message: 'Erro ao fazer login', err: err.message });
   }
 });
 
