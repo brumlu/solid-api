@@ -8,44 +8,62 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const router = express.Router();
 
 router.post('/cadastro', async (req, res) => {
-try{
-    const user = req.body;
-    const hashedPassword = await bcrypt.hash(user.password, 10);
-    await prisma.users.create({
-        data: {
-            email: user.email,
-            name: user.name,
-            password: hashedPassword,
-        },
-    });
-    res.status(201).json({ message: 'Usuário cadastrado com sucesso', user: { email: user.email, name: user.name, password: hashedPassword } });
-    } catch (error) {
-        res.status(500).json({ message: 'Erro ao cadastrar usuário', error: error.message });
-    }
-});
+  try {
+    const { email, name, password } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
 
+    const newUser = await prisma.users.create({
+      data: {
+        email,
+        name,
+        password: hashedPassword,
+        // Vincula o usuário na Role ALUNO por padrão
+        role: {
+          connect: { name: 'ALUNO' } 
+        }
+      },
+    });
+
+    res.status(201).json({ message: 'Usuário cadastrado com sucesso' });
+  } catch (error) {
+    res.status(500).json({ message: 'Erro ao cadastrar usuário', error: error.message });
+  }
+});
 
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Email e senha obrigatórios' });
+    const user = await prisma.users.findUnique({
+      where: { email },
+      include: { 
+        role: { include: { permissions: true } } 
+      }
+    });
+
+    // Validar se usuário existe e senha bate
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ message: 'Credenciais inválidas' });
     }
 
-    const user = await prisma.users.findUnique({ where: { email } });
+    // Extrair permissões com segurança
+    const userPermissions = user.role?.permissions.map(p => p.name) || [];
 
-    if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
+    const token = jwt.sign(
+        { 
+            id: user.id, 
+            permissions: userPermissions 
+        }, 
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+        );
 
-    const valid = await bcrypt.compare(password, user.password);
-    if (!valid) return res.status(401).json({ message: 'Senha incorreta' });
-
-    const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: '7d' });
-    res.status(200).json(token);
-
-  }catch (err) {
-    res.status(500).json({ message: 'Erro ao fazer login', err: err.message });
-  }
-});
+        // Retornar o token JWT para o cliente e salvar no localStorage no front futuramente
+        return res.status(200).send(token);
+        
+    }catch (err) {
+        res.status(500).json({ message: 'Erro ao fazer login', err: err.message });
+    }
+    });
 
 export default router;
