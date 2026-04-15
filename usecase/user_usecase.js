@@ -25,6 +25,10 @@ export class CreateUser {
 
 // 2. Login de Usuário
 export class LoginUser {
+  /**
+   * O construtor recebe as abstrações (DIP).
+   * Não importamos JWT ou Bcrypt aqui.
+   */
   constructor(userRepository, hashProvider, tokenProvider) {
     this.userRepository = userRepository;
     this.hashProvider = hashProvider;
@@ -32,20 +36,44 @@ export class LoginUser {
   }
 
   async execute({ email, password }) {
+    // Busca o usuário e suas permissões através do repositório
+    // O repositório deve retornar a Entity User + array de permissões
     const result = await this.userRepository.findByEmailWithPermissions(email);
-    if (!result || !result.user) throw new Error('Credenciais inválidas');
 
+    // Validação: Usuário existe?
+    if (!result || !result.user) {
+      throw new Error('Credenciais inválidas'); 
+      // Usar a mesma mensagem para e-mail inexistente ou senha errada por segurança
+    }
+
+    // 3. Validação: A senha informada bate com o hash do banco?
+    // Delegamos a comparação para o HashProvider
     const isPasswordValid = await this.hashProvider.compareHash(
       password, 
       result.user.password
     );
 
-    if (!isPasswordValid) throw new Error('Credenciais inválidas');
+    if (!isPasswordValid) {
+      throw new Error('Credenciais inválidas');
+    }
 
-    return this.tokenProvider.generate({ 
+    // Geração do Token:
+    // Delegamos para o TokenProvider, passando apenas o necessário no payload
+    const token = this.tokenProvider.generate({ 
       id: result.user.id, 
+      email: result.user.email,
       permissions: result.permissions 
     });
+
+    //  Use Case entrega o token pronto para o Controller
+    return { 
+      token,
+      user: {
+        id: result.user.id,
+        name: result.user.name,
+        email: result.user.email
+      }
+    };
   }
 }
 

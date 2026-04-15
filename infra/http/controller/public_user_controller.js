@@ -24,19 +24,20 @@ export class PublicUserController {
   }
 
   // Lógica de Login (Refatorada do código antigo)
-  async login(req, res) {
+async login(req, res) {
     try {
       const { email, password } = req.body;
 
-      // Agora toda a lógica de bcrypt, prisma e jwt está no Use Case
-      const { token } = await this.loginUserUseCase.execute({ email, password });
+      // 1. O await é obrigatório aqui
+      const result = await this.loginUserUseCase.execute({ email, password });
 
-      // Retorna o token para o cliente
-      return res.status(200).send(token);
-    } catch (error) {
-      // Erro de credenciais é sempre 401 (Não autorizado)
-      const status = error.message === 'Credenciais inválidas' ? 401 : 500;
-      return res.status(status).json({ message: error.message });
+      // 2. O 'result' contém o objeto { token: '...' } que retornamos no Use Case
+      return res.status(200).send(result.token);
+
+    } catch (err) {
+      // É bom logar o erro no console para depurar enquanto desenvolve
+      console.error(err);
+      return res.status(401).json({ message: err.message || 'Erro no login' });
     }
   }
 }
