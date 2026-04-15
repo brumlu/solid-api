@@ -7,16 +7,22 @@ import auth from './middlewares/auth.js';
 import checkPermission from './middlewares/checkPermission.js';
 import isOwnerOrAdmin from './middlewares/isOwnerOrAdmin.js';
 import { Permissions } from '../../model/constants/permissions.js';
+import { HashProvider } from '../providers/hash_provider.js';
+import { TokenProvider } from '../providers/token_provider.js';
 
 const router = Router();
 
 // --- INJEÇÃO DE DEPENDÊNCIAS ---
 // 1. O Repositório (Acesso ao Banco)
 const userRepository = new UserRepository();
+const hashProvider = new HashProvider();
+const tokenProvider = new TokenProvider();
+
+
 
 // 2. Os Casos de Uso (Regras de Negócio)
-const createUserUseCase = new CreateUser(userRepository);
-const loginUserUseCase = new LoginUser(userRepository);
+const createUserUseCase = new CreateUser(userRepository, hashProvider);
+const loginUserUseCase = new LoginUser(userRepository, hashProvider, tokenProvider);
 
 // 3. O Controller (Entrada e Saída HTTP)
 // Passamos os dois casos de uso para o construtor do controller

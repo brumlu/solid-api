@@ -1,10 +1,10 @@
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import { User } from '../model/entities/User.js'; // Importe a entidade User para o Create
 
 export class CreateUser {
-  constructor(userRepository) {
+  // Agora recebemos o repositório E o hashProvider
+  constructor(userRepository, hashProvider) {
     this.userRepository = userRepository;
+    this.hashProvider = hashProvider;
   }
 
   async execute({ email, name, password }) {
@@ -14,11 +14,11 @@ export class CreateUser {
       throw new Error('Este email já está em uso.');
     }
 
-    // 2. Processamento de dados: Hash da senha
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // 2. Processamento de dados: Hash da senha usando o PROVIDER
+    // Note que agora usamos 'this.hashProvider.generateHash' (o método que criamos no Provider)
+    const hashedPassword = await this.hashProvider.generateHash(password);
 
     // 3. Criar a Entidade de Domínio
-    // É boa prática criar a entidade antes de mandar para o repo
     const userEntity = new User({
       email,
       name,
@@ -31,37 +31,31 @@ export class CreateUser {
 }
 
 export class LoginUser {
-  constructor(userRepository) {
+  // Agora recebemos o HashProvider e o TokenProvider
+  constructor(userRepository, hashProvider, tokenProvider) {
     this.userRepository = userRepository;
+    this.hashProvider = hashProvider;
+    this.tokenProvider = tokenProvider;
   }
 
   async execute({ email, password }) {
-    // 1. Busca o usuário (Usando o método que retorna { user, permissions })
     const result = await this.userRepository.findByEmailWithPermissions(email);
 
-    // 2. Valida existência
-    if (!result || !result.user) {
-      throw new Error('Credenciais inválidas');
-    }
+    if (!result || !result.user) throw new Error('Credenciais inválidas');
 
-    const { user, permissions } = result;
-
-    // 3. Valida a senha (acessando user.password da entidade)
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      throw new Error('Credenciais inválidas');
-    }
-
-    // 4. Gera o Token
-    // Usamos as permissões que o repositório já buscou e formatou
-    const token = jwt.sign(
-      { 
-        id: user.id, 
-        permissions: permissions 
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
+    // O Use Case não sabe que é Bcrypt, ele apenas pede para comparar
+    const isPasswordValid = await this.hashProvider.compareHash(
+      password, 
+      result.user.password
     );
+
+    if (!isPasswordValid) throw new Error('Credenciais inválidas');
+
+    // O Use Case não sabe que é JWT, ele apenas pede um token
+    const token = this.tokenProvider.generate({ 
+      id: result.user.id, 
+      permissions: result.permissions 
+    });
 
     return { token };
   }
