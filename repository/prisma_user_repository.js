@@ -6,7 +6,6 @@ import { User } from '../model/entities/User.js';
 export class UserRepository {
   
   // Transforma o objeto do Prisma em uma Entidade de Domínio
-  // Criamos este método privado para não repetir código
   #mapToEntity(userData) {
     if (!userData) return null;
     return new User({
@@ -27,14 +26,33 @@ export class UserRepository {
   async findByEmailWithPermissions(email) {
     const userData = await prisma.users.findUnique({
       where: { email },
-      include: { role: { include: { permissions: true } } }
+      include: { 
+        role: { 
+          include: { 
+            permissions: { 
+              include: { 
+                permission: true // Traz os dados da tabela Permission
+              } 
+            } 
+          } 
+        } 
+      }
     });
 
     if (!userData) return null;
 
+    /**
+     * CORREÇÃO AQUI:
+     * Como a relação é explícita, o array é: 
+     * userData.role.permissions = [{ permission: { name: 'USER_READ' } }, ...]
+     */
+    const permissionsNames = userData.role?.permissions.map(
+      (rp) => rp.permission.name
+    ) || [];
+
     return {
       user: this.#mapToEntity(userData),
-      permissions: userData.role?.permissions.map(p => p.name) || []
+      permissions: permissionsNames
     };
   }
 
@@ -44,7 +62,8 @@ export class UserRepository {
         email: userEntity.email,
         name: userEntity.name,
         password: userEntity.password,
-        role: { connect: { name: 'ALUNO' } } // Padrão para o SafeWoman SSA
+        // No seed usamos 'Default' ou 'ALUNO', garanta que o nome aqui seja igual ao do banco
+        role: { connect: { name: 'Default' } } 
       },
     });
 
@@ -52,15 +71,12 @@ export class UserRepository {
   }
 
   async findAll() {
-    const users = await prisma.users.findMany({
-      include: { role: { select: { name: true } } }
-    });
-    
-    // IMPORTANTE: O Use Case espera Entidades, não objetos do Prisma
+    const users = await prisma.users.findMany();
     return users.map(user => this.#mapToEntity(user));
   }
 
   async update(id, data) {
+    // Garantimos que o ID seja um número, vindo da rota como string
     const updatedUser = await prisma.users.update({
       where: { id: Number(id) },
       data
@@ -76,7 +92,6 @@ export class UserRepository {
   }
 
   async findRoleByName(name) {
-    // Aqui não precisamos converter para User, pois é uma busca de Role
     return await prisma.role.findUnique({ where: { name } });
   }
 }

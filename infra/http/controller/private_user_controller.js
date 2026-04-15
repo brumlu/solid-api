@@ -73,7 +73,7 @@ export class PrivateUserController {
       }
       
       await this.useCases.changeRole.promoteToAdmin(req.params.id);
-      return res.status(200).json({ message: "Promovido a ADMIN" });
+      return res.status(200).json({ message: "Promovido a Admin" });
     } catch (err) {
       return res.status(500).json({ message: err.message });
     }

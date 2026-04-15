@@ -20,7 +20,6 @@ model Users {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  // Relação 1:N - Um usuário tem um papel (Role)
   roleId    Int
   role      Role     @relation(fields: [roleId], references: [id])
 
@@ -29,27 +28,40 @@ model Users {
 
 model Role {
   id          Int      @id @default(autoincrement())
-  name        String   @unique // ex: "ADMIN", "ALUNO", "EDITOR"
-  description String?  // Descrição do que este papel faz
+  name        String   @unique
+  description String?
   createdAt   DateTime @default(now())
 
-  // Relação N:1 com usuários
   users       Users[]
   
-  // Relação N:N com permissões
-  permissions Permission[] @relation("RolePermissions")
+  // Agora a relação aponta para a tabela intermediária explícita
+  permissions RolePermission[]
 
   @@map("roles")
 }
 
 model Permission {
   id          Int      @id @default(autoincrement())
-  name        String   @unique // ex: "USER_CREATE", "USER_DELETE"
+  name        String   @unique
   description String? 
   createdAt   DateTime @default(now())
 
-  // Relação N:N com papéis
-  roles       Role[] @relation("RolePermissions")
+  // Agora a relação aponta para a tabela intermediária explícita
+  roles       RolePermission[]
 
   @@map("permissions")
+}
+
+// ESTA É A NOVA TABELA EXPLÍCITA
+model RolePermission {
+  roleId       Int
+  permissionId Int
+  
+  // Define quem são os "pais" desta relação
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  // Define a chave primária composta (evita duplicatas da mesma permissão na mesma role)
+  @@id([roleId, permissionId])
+  @@map("role_permissions") // Nome da tabela no banco
 }
