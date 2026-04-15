@@ -119,7 +119,7 @@ router.patch('/internal/setup-admin/:id', async (req, res) => {
         const adminRole = await prisma.role.findUnique({ where: { name: 'ADMIN' } });
 
         if (!adminRole) {
-            return res.status(404).json({ message: "Erro: O cargo 'ADMIN' ainda não foi criado no banco. Rode o Seed primeiro." });
+            return res.status(404).json({ message: "O cargo 'ADMIN' ainda não foi criado no banco." });
         }
 
         await prisma.users.update({

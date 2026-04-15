@@ -22,7 +22,7 @@ const checkPermission = (requiredPermission) => {
 
     // Se não for super usuário nem tiver a permissão específica
     return res.status(403).json({ 
-      message: `Acesso negado: Requer privilégio [${requiredPermission}] ou [ADMIN_ACCESS].` 
+      message: `Acesso negado: Requer privilégio ${requiredPermission}.` 
     });
   };
 };
