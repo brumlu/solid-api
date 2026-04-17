@@ -1,5 +1,3 @@
-// 1. Corrija o import: como este arquivo está em infra/database/repositories, 
-// o caminho para o prisma.js deve ser um nível acima.
 import prisma from '../infra/database/prisma.js'; 
 import { User } from '../model/entities/User.js'; 
 
@@ -35,11 +33,6 @@ export class UserRepository {
 
     if (!userData) return null;
 
-    /**
-     * CORREÇÃO AQUI:
-     * Como a relação é explícita, o array é: 
-     * userData.role.permissions = [{ permission: { name: 'USER_READ' } }, ...]
-     */
     const permissionsNames = userData.role?.permissions.map(
       (rp) => rp.permission.name
     ) || [];
@@ -56,7 +49,6 @@ export class UserRepository {
         email: userEntity.email,
         name: userEntity.name,
         password: userEntity.password,
-        // No seed usamos 'Default' ou 'ALUNO', garanta que o nome aqui seja igual ao do banco
         role: { connect: { name: 'Default' } } 
       },
     });
@@ -70,7 +62,7 @@ export class UserRepository {
   }
 
   async update(id, data) {
-    // Garantimos que o ID seja um número, vindo da rota como string
+    // Garantindo que o ID seja um número, vindo da rota como string
     const updatedUser = await prisma.users.update({
       where: { id: Number(id) },
       data

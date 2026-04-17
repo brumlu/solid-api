@@ -4,12 +4,10 @@ export class PublicUserController {
     this.loginUserUseCase = loginUserUseCase;
   }
 
-  // Lógica de Cadastro
   async cadastro(req, res) {
     try {
       const { email, name, password } = req.body;
 
-      // Chama o caso de uso de criação
       const user = await this.createUserUseCase.execute({ email, name, password });
 
       return res.status(201).json({ 
@@ -23,8 +21,7 @@ export class PublicUserController {
     }
   }
 
-  // Lógica de Login (Refatorada do código antigo)
-async login(req, res) {
+  async login(req, res) {
     try {
       const { email, password } = req.body;
 

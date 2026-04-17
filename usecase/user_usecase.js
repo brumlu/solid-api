@@ -1,6 +1,5 @@
 import { User } from '../model/entities/User.js';
 
-// 1. Criar Usuário
 export class CreateUser {
   constructor(userRepository, hashProvider) {
     this.userRepository = userRepository;
@@ -23,7 +22,6 @@ export class CreateUser {
   }
 }
 
-// 2. Login de Usuário
 export class LoginUser {
   constructor(userRepository, hashProvider, tokenProvider) {
     this.userRepository = userRepository;

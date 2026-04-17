@@ -45,10 +45,6 @@ export class PrivateUserController {
     }
   }
 
-  /**
-   * NOVO MÉTODO: Alterar Cargo (Admin Tool)
-   * Agora a lógica que estava no routes.js mora aqui.
-   */
   async alterarCargo(req, res) {
     try {
       const { id } = req.params;
@@ -67,7 +63,6 @@ export class PrivateUserController {
 
   async setupAdmin(req, res) {
     try {
-      // Usa a chave injetada em vez de process.env
       if (req.headers['x-master-key'] !== this.masterKey) {
         return res.status(403).json({ message: "Acesso negado." });
       }

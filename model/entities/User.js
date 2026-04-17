@@ -7,13 +7,12 @@ export class User {
     this.roleId = roleId;
     this.createdAt = createdAt;
 
-    // Validação de negócio simples
     if (!email.includes('@')) {
       throw new Error("Email inválido");
     }
   }
 
-  // Comportamento: Por exemplo, ocultar a senha ao retornar dados
+  // Ocultar a senha ao retornar dados
   toJSON() {
     const { password, ...userWithoutPassword } = this;
     return userWithoutPassword;
