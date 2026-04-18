@@ -23,7 +23,7 @@ describe('Login Operations (Integration)', () => {
 
     // 3. Cadastra o usuário via rota oficial para garantir o hash da senha
     await request(app)
-      .post('/cadastro')
+      .post('/register')
       .send(loginUser);
   });
 

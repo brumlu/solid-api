@@ -26,7 +26,7 @@ describe('Delete User (Integration)', () => {
     });
 
     // 3. Cadastra o usuário
-    const registerRes = await request(app).post('/cadastro').send(userToDelete);
+    const registerRes = await request(app).post('/register').send(userToDelete);
     
     // De acordo com seu PublicUserController, a chave retornada é userId
     userId = registerRes.body.userId;
@@ -42,7 +42,7 @@ describe('Delete User (Integration)', () => {
   it('deve ser capaz de deletar o próprio usuário usando o ID na rota', async () => {
     // Verifique se no seu routes.js o caminho é este mesmo
     const response = await request(app)
-      .delete(`/deletar-minha-conta/${userId}`) 
+      .delete(`/users/${userId}`) 
       .set('Authorization', `Bearer ${userToken}`);
 
     // Seu PrivateUserController retorna 200
@@ -72,14 +72,14 @@ describe('Delete User (Integration)', () => {
 
   it('deve retornar 403 se um usuário tentar deletar outro', async () => {
     // 1. Criar um usuário "Intruso"
-    const intruderRes = await request(app).post('/cadastro').send({
+    const intruderRes = await request(app).post('/register').send({
       name: 'Intruso',
       email: 'intruder@teste.com',
       password: 'password123'
     });
     
     // 2. Criar uma "Vítima"
-    const victimRes = await request(app).post('/cadastro').send({
+    const victimRes = await request(app).post('/register').send({
       name: 'Vítima',
       email: 'victim@teste.com',
       password: 'password123'
@@ -95,7 +95,7 @@ describe('Delete User (Integration)', () => {
 
     // 4. Intruso tenta deletar a Vítima
     const response = await request(app)
-      .delete(`/deletar-minha-conta/${victimId}`)
+      .delete(`/users/${victimId}`)
       .set('Authorization', `Bearer ${intruderToken}`);
 
     // O middleware isOwnerOrAdmin deve barrar

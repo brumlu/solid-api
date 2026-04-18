@@ -25,7 +25,7 @@ describe('Create User (Integration)', () => {
 
   it('deve ser capaz de cadastrar um novo usuário', async () => {
     const response = await request(app)
-      .post('/cadastro')
+      .post('/register')
       .send(newUser);
 
     // Com o novo padrão, o sucesso deve ser sempre 201 (Created)
@@ -37,7 +37,7 @@ describe('Create User (Integration)', () => {
   it('não deve cadastrar um email que já existe no sistema', async () => {
     // Tenta cadastrar o mesmo usuário novamente
     const response = await request(app)
-      .post('/cadastro')
+      .post('/register')
       .send(newUser);
 
     // O ErrorHandler agora mapeia UserAlreadyExistsError para 409 (Conflict)
@@ -48,7 +48,7 @@ describe('Create User (Integration)', () => {
 
   it('não deve cadastrar com dados inválidos (ex: email mal formatado)', async () => {
     const response = await request(app)
-      .post('/cadastro')
+      .post('/register')
       .send({ 
         name: 'Luca',
         email: 'email-invalido', 

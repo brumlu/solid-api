@@ -30,7 +30,7 @@ describe('Update User (Integration)', () => {
 
     // 2. Cria o usuário
     const registerRes = await request(app)
-      .post('/cadastro')
+      .post('/register')
       .send(originalUser);
     
     userId = registerRes.body.userId;
@@ -48,7 +48,7 @@ describe('Update User (Integration)', () => {
 
   it('deve ser capaz de atualizar os próprios dados usando PATCH', async () => {
     const response = await request(app)
-      .patch(`/atualizar-usuario/${userId}`) 
+      .patch(`/users-update/${userId}`) 
       .set('Authorization', `Bearer ${userToken}`)
       .send(updatedData);
 
@@ -68,7 +68,7 @@ describe('Update User (Integration)', () => {
 
   it('deve bloquear a atualização se o usuário tentar atualizar outro ID', async () => {
     // 1. Criar um segundo usuário
-    const secondUserRes = await request(app).post('/cadastro').send({
+    const secondUserRes = await request(app).post('/register').send({
       name: 'Outro Usuario',
       email: 'outro.cara@teste.com',
       password: 'password123'
@@ -77,7 +77,7 @@ describe('Update User (Integration)', () => {
 
     // 2. O primeiro usuário (Luca) tenta atualizar o segundo (Outro)
     const response = await request(app)
-      .patch(`/atualizar-usuario/${secondUserId}`)
+      .patch(`/users-update/${secondUserId}`)
       .set('Authorization', `Bearer ${userToken}`)
       .send({ name: 'Hacker' });
 
@@ -87,7 +87,7 @@ describe('Update User (Integration)', () => {
 
   it('deve retornar 401 para requisições sem token', async () => {
     const response = await request(app)
-      .patch(`/atualizar-usuario/${userId}`)
+      .patch(`/users-update/${userId}`)
       .send(updatedData);
 
     expect(response.status).toBe(401);
@@ -96,7 +96,7 @@ describe('Update User (Integration)', () => {
   it('deve retornar 404 se tentar atualizar um usuário que não existe', async () => {
     // Geramos um ID que não existe (ex: 9999)
     const response = await request(app)
-      .patch('/atualizar-usuario/9999')
+      .patch('/users-update/9999')
       .set('Authorization', `Bearer ${userToken}`)
       .send({ name: 'Inexistente' });
 

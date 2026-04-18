@@ -13,32 +13,32 @@ const publicUserController = makePublicUserController();
 const privateUserController = makePrivateUserController();
 
 // --- ROTAS PUBLICAS ---
-router.post('/cadastro', validate(createUserSchema), (req, res) => publicUserController.cadastro(req, res));
+router.post('/register', validate(createUserSchema), (req, res) => publicUserController.cadastro(req, res));
 router.post('/login', validate(loginUserSchema), (req, res) => publicUserController.login(req, res));
 
 // --- ROTAS PRIVADAS ---
 
-router.get('/listar-usuarios', auth, checkPermission(Permissions.USER_READ), (req, res) => 
+router.get('/users', auth, checkPermission(Permissions.USER_READ), (req, res) => 
   privateUserController.listar(req, res)
 );
 
-router.patch('/atualizar-usuario/:id', auth, isOwnerOrAdmin, (req, res) => 
+router.patch('/users-update/:id', auth, isOwnerOrAdmin, (req, res) => 
   privateUserController.atualizar(req, res)
 );
 
-router.patch('/atualizar-senha/:id', auth, isOwnerOrAdmin, (req, res) => 
+router.patch('/password-update/:id', auth, isOwnerOrAdmin, (req, res) => 
   privateUserController.atualizarSenha(req, res)
 );
 
-router.patch('/admin/alterar-privilegio/:id', auth, checkPermission(Permissions.ADMIN_ACCESS), (req, res) => 
+router.patch('/role-update/:id', auth, checkPermission(Permissions.ADMIN_ACCESS), (req, res) => 
   privateUserController.alterarCargo(req, res)
 );
 
-router.patch('/internal/setup-admin/:id', (req, res) => 
+router.patch('/setup-admin/:id', (req, res) => 
   privateUserController.setupAdmin(req, res)
 );
 
-router.delete('/deletar-minha-conta/:id', auth, isOwnerOrAdmin, (req, res) => 
+router.delete('/users/:id', auth, isOwnerOrAdmin, (req, res) => 
   privateUserController.deletar(req, res)
 );
 

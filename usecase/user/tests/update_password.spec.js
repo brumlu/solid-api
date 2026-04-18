@@ -25,7 +25,7 @@ describe('Update Password (Integration)', () => {
     });
 
     // 2. Cadastra o usuário com a senha inicial
-    const registerRes = await request(app).post('/cadastro').send({
+    const registerRes = await request(app).post('/register').send({
       name: userCredentials.name,
       email: userCredentials.email,
       password: userCredentials.oldPassword
@@ -44,7 +44,7 @@ describe('Update Password (Integration)', () => {
 
   it('deve ser capaz de alterar a própria senha usando o ID na rota', async () => {
     const response = await request(app)
-      .patch(`/atualizar-senha/${userId}`) 
+      .patch(`/password-update/${userId}`) 
       .set('Authorization', `Bearer ${userToken}`)
       .send({
         // Verifique se o seu DTO/Zod espera "password"
@@ -82,7 +82,7 @@ describe('Update Password (Integration)', () => {
 
   it('deve retornar 403 se tentar alterar a senha de outro usuário', async () => {
     // 1. Criar um segundo usuário
-    const secondUser = await request(app).post('/cadastro').send({
+    const secondUser = await request(app).post('/register').send({
       name: 'Vítima',
       email: 'vitima@teste.com',
       password: 'password123'
@@ -91,7 +91,7 @@ describe('Update Password (Integration)', () => {
 
     // 2. O usuário "Luca" tenta mudar a senha da "Vítima"
     const response = await request(app)
-      .patch(`/atualizar-senha/${secondUserId}`)
+      .patch(`/password-update/${secondUserId}`)
       .set('Authorization', `Bearer ${userToken}`)
       .send({ password: 'hackedPassword' });
 

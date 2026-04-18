@@ -32,13 +32,13 @@ describe('List Users Operations (Integration)', () => {
 
     // 3. Criar usuários via rota de cadastro 
     // (Isso garante que o UseCase atribua a role 'Default' automaticamente)
-    await request(app).post('/cadastro').send({
+    await request(app).post('/register').send({
       name: 'Luca List',
       email: 'luca.list@teste.com',
       password: 'password123'
     });
 
-    await request(app).post('/cadastro').send({
+    await request(app).post('/register').send({
       name: 'Outro Usuario',
       email: 'outro@teste.com',
       password: 'password123'
@@ -55,7 +55,7 @@ describe('List Users Operations (Integration)', () => {
 
   it('deve ser capaz de listar todos os usuários cadastrados', async () => {
     const response = await request(app)
-      .get('/listar-usuarios')
+      .get('/users')
       .set('Authorization', `Bearer ${userToken}`);
 
     // Se retornar 403 aqui, significa que a role do usuário não tem a USER_READ
@@ -76,7 +76,7 @@ describe('List Users Operations (Integration)', () => {
   });
 
   it('deve retornar 401 se tentar listar sem token', async () => {
-    const response = await request(app).get('/listar-usuarios');
+    const response = await request(app).get('/users');
     expect(response.status).toBe(401);
   });
 });

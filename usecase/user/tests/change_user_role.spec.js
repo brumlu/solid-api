@@ -50,7 +50,7 @@ describe('Change User Role (Integration)', () => {
     defaultRoleId = roleDefault.id;
 
     // 5. Criar o usuário Administrador para o teste
-    const adminReg = await request(app).post('/cadastro').send({
+    const adminReg = await request(app).post('/register').send({
       name: 'Luca Admin',
       email: 'admin.integracao@teste.com',
       password: 'password123'
@@ -73,7 +73,7 @@ describe('Change User Role (Integration)', () => {
     adminToken = loginRes.body.token;
 
     // 8. Criar o usuário comum que terá a role alterada (o alvo)
-    const userRes = await request(app).post('/cadastro').send({
+    const userRes = await request(app).post('/register').send({
       name: 'Usuário Alvo',
       email: 'alvo@teste.com',
       password: 'password123'
@@ -90,7 +90,7 @@ describe('Change User Role (Integration)', () => {
 
   it('deve permitir que um administrador altere a role de outro usuário', async () => {
     const response = await request(app)
-      .patch(`/admin/alterar-privilegio/${commonUserId}`) 
+      .patch(`/role-update/${commonUserId}`) 
       .set('Authorization', `Bearer ${adminToken}`)
       .send({
         roleId: adminRoleId 
@@ -124,7 +124,7 @@ describe('Change User Role (Integration)', () => {
 
     // Tentativa de auto-promoção: Deve ser barrado pelo middleware
     const response = await request(app)
-      .patch(`/admin/alterar-privilegio/${commonUserId}`)
+      .patch(`/role-update/${commonUserId}`)
       .set('Authorization', `Bearer ${commonToken}`)
       .send({ roleId: adminRoleId });
 
@@ -134,7 +134,7 @@ describe('Change User Role (Integration)', () => {
 
   it('deve impedir que um usuário sem token acesse a rota (401)', async () => {
     const response = await request(app)
-      .patch(`/admin/alterar-privilegio/${commonUserId}`)
+      .patch(`/role-update/${commonUserId}`)
       .send({ roleId: adminRoleId });
 
     expect(response.status).toBe(401);
