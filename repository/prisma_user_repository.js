@@ -16,6 +16,15 @@ export class UserRepository {
     });
   }
 
+  // --- MÉTODOS DE BUSCA ---
+
+  async findById(id) {
+    const userData = await prisma.users.findUnique({ 
+      where: { id: Number(id) } 
+    });
+    return this.#mapToEntity(userData);
+  }
+
   async findByEmail(email) {
     const userData = await prisma.users.findUnique({ where: { email } });
     return this.#mapToEntity(userData);
@@ -43,6 +52,13 @@ export class UserRepository {
     };
   }
 
+  async findAll() {
+    const users = await prisma.users.findMany();
+    return users.map(user => this.#mapToEntity(user));
+  }
+
+  // --- MÉTODOS DE ESCRITA ---
+
   async create(userEntity) {
     const createdUser = await prisma.users.create({
       data: {
@@ -56,13 +72,7 @@ export class UserRepository {
     return this.#mapToEntity(createdUser);
   }
 
-  async findAll() {
-    const users = await prisma.users.findMany();
-    return users.map(user => this.#mapToEntity(user));
-  }
-
   async update(id, data) {
-    // Garantindo que o ID seja um número, vindo da rota como string
     const updatedUser = await prisma.users.update({
       where: { id: Number(id) },
       data
@@ -77,7 +87,11 @@ export class UserRepository {
     return this.#mapToEntity(deletedUser);
   }
 
+  // --- MÉTODOS DE APOIO (ROLES) ---
+
   async findRoleByName(name) {
-    return await prisma.role.findUnique({ where: { name } });
+    return await prisma.role.findUnique({ 
+      where: { name } 
+    });
   }
 }

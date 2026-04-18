@@ -2,38 +2,39 @@ export class PublicUserController {
   constructor(createUserUseCase, loginUserUseCase) {
     this.createUserUseCase = createUserUseCase;
     this.loginUserUseCase = loginUserUseCase;
+
+    // Garante que o 'this' funcione nas rotas
+    this.cadastro = this.cadastro.bind(this);
+    this.login = this.login.bind(this);
   }
 
   async cadastro(req, res) {
-    try {
-      const { email, name, password } = req.body;
+    const { email, name, password } = req.body;
 
-      const user = await this.createUserUseCase.execute({ email, name, password });
+    const result = await this.createUserUseCase.execute({ email, name, password });
 
-      return res.status(201).json({ 
-        message: 'Usuário cadastrado com sucesso',
-        userId: user.id 
-      });
-    } catch (error) {
-      // Diferencia erro de negócio (400) de erro de servidor (500)
-      const status = error.message === 'Este email já está em uso.' ? 400 : 500;
-      return res.status(status).json({ message: error.message });
+    if (result.isLeft()) {
+      throw result.value; // Lança o UserAlreadyExistsError ou erro de validação
     }
+
+    const user = result.value;
+
+    return res.status(201).json({ 
+      message: 'Usuário cadastrado com sucesso',
+      userId: user.id 
+    });
   }
 
   async login(req, res) {
-    try {
-      const { email, password } = req.body;
+    const { email, password } = req.body;
 
-      // await é obrigatório
-      const result = await this.loginUserUseCase.execute({ email, password });
+    const result = await this.loginUserUseCase.execute({ email, password });
 
-      return res.status(200).json({ token: result.token });
-
-    } catch (err) {
-      // Log de erro no console
-      console.error(err);
-      return res.status(401).json({ message: err.message || 'Erro no login' });
+    if (result.isLeft()) {
+      throw result.value; // Lança o InvalidCredentialsError (401)
     }
+
+    const { token } = result.value;
+    return res.status(200).json({ token });
   }
 }

@@ -11,22 +11,17 @@ describe('Login Operations (Integration)', () => {
   };
 
   beforeAll(async () => {
-    // 1. Limpeza
+    // 1. Limpeza do banco
     await prisma.users.deleteMany();
 
-    // 2. Garante a Role Default (necessária para o cadastro interno)
-    try {
-      await prisma.role.upsert({
-        where: { name: 'Default' },
-        update: {},
-        create: { name: 'Default' }
-      });
-    } catch (e) {
-      // Role já existe
-    }
+    // 2. Garante a Role Default
+    await prisma.role.upsert({
+      where: { name: 'Default' },
+      update: {},
+      create: { name: 'Default' }
+    });
 
-    // 3. Cadastra o usuário que vamos usar para logar
-    // Fazemos isso via request para garantir que a senha seja hasheada pelo seu UseCase
+    // 3. Cadastra o usuário via rota oficial para garantir o hash da senha
     await request(app)
       .post('/cadastro')
       .send(loginUser);
@@ -42,7 +37,7 @@ describe('Login Operations (Integration)', () => {
 
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('token');
-    // Verifica se o token tem o formato JWT (começa com ey...)
+    // Verifica se o token parece um JWT válido
     expect(response.body.token).toMatch(/^ey/);
   });
 
@@ -54,9 +49,10 @@ describe('Login Operations (Integration)', () => {
         password: 'senha_errada'
       });
 
+    // O ErrorHandler deve retornar 401 (Unauthorized)
     expect(response.status).toBe(401);
+    expect(response.body.message).toMatch(/inválid/i); 
     expect(response.body.token).toBeUndefined();
-    expect(response.body.message).toMatch(/inválid/i);
   });
 
   it('não deve logar com um e-mail que não existe no sistema', async () => {
@@ -67,7 +63,9 @@ describe('Login Operations (Integration)', () => {
         password: 'password123'
       });
 
+    // Segurança: Retornamos 401 mesmo se o e-mail não existir para evitar enumeração de usuários
     expect(response.status).toBe(401);
+    expect(response.body.message).toMatch(/inválid/i);
   });
 
   it('deve retornar erro 400 se o corpo da requisição estiver incompleto', async () => {
@@ -75,6 +73,8 @@ describe('Login Operations (Integration)', () => {
       .post('/login')
       .send({ email: loginUser.email }); // Faltando password
 
+    // Aqui o seu Middleware de Validação (Zod) deve atuar
     expect(response.status).toBe(400);
+    expect(response.body).toHaveProperty('details'); // O mapeamento amigável que fizemos no validator.js
   });
 });

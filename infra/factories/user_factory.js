@@ -1,9 +1,7 @@
-// 1. Camada de Infra (Detalhes Técnicos)
 import { UserRepository } from '../../repository/prisma_user_repository.js';
 import { HashProvider } from '../providers/hash_provider.js';
 import { TokenProvider } from '../providers/token_provider.js';
 
-// 2. Camada de Aplicação (Regras de Negócio)
 import { 
   CreateUser, 
   LoginUser, 
@@ -14,35 +12,30 @@ import {
   ChangeUserRole 
 } from '../../usecase/user/user_usecase.js';
 
-// 3. Camada de Adaptadores (Entrada/Saída)
 import { PublicUserController } from '../http/controller/public_user_controller.js';
 import { PrivateUserController } from '../http/controller/private_user_controller.js';
 
-// --- FÁBRICAS ---
+// 1. Instâncias de Infra (Compartilhadas para economizar memória)
+const userRepository = new UserRepository();
+const hashProvider = new HashProvider();
+const tokenProvider = new TokenProvider();
 
 export const makePublicUserController = () => {
-  // Instanciamos os detalhes técnicos uma única vez
-  const userRepository = new UserRepository();
-  const hashProvider = new HashProvider();
-  const tokenProvider = new TokenProvider();
-
-  // Injetamos as dependências nos Use Cases
+  // 2. Injeção nos casos de uso públicos
   const createUserUseCase = new CreateUser(userRepository, hashProvider);
   const loginUserUseCase = new LoginUser(userRepository, hashProvider, tokenProvider);
 
-  // Retornamos o Controller pronto para o Router
+  // 3. Retorna o controller pronto
   return new PublicUserController(createUserUseCase, loginUserUseCase);
 };
 
 export const makePrivateUserController = () => {
-  const userRepository = new UserRepository();
-  const hashProvider = new HashProvider(); // Para troca de senha
   const masterKey = process.env.MASTER_KEY;
 
+  // 4. Agrupamento de casos de uso privados
   const useCases = {
     listUsers: new ListUsers(userRepository),
     updateUser: new UpdateUser(userRepository),
-    // Aqui aplicamos o DIP: passamos o hashProvider para o caso de uso de senha
     updatePassword: new UpdateUserPassword(userRepository, hashProvider),
     deleteUser: new DeleteUser(userRepository),
     changeRole: new ChangeUserRole(userRepository)

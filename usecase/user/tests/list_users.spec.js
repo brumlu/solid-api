@@ -7,18 +7,21 @@ describe('List Users Operations (Integration)', () => {
   let userToken = '';
 
   beforeAll(async () => {
-    // 1. Limpeza do banco
-    await prisma.users.deleteMany();
+    // 1. Limpeza profunda respeitando a integridade referencial
+    // (A ordem importa se houver Foreign Keys)
     if (prisma.rolePermission) await prisma.rolePermission.deleteMany();
+    await prisma.users.deleteMany();
     await prisma.permission.deleteMany();
     await prisma.role.deleteMany();
 
-    // 2. Setup de Permissões (Caso seu middleware exija USER_READ)
+    // 2. Setup de Permissões
+    // O seu middleware 'checkPermission' provavelmente busca por este nome:
     const permission = await prisma.permission.create({
       data: { name: 'USER_READ' }
     });
 
-    const role = await prisma.role.create({
+    // Criamos a role Default e já conectamos a permissão necessária
+    await prisma.role.create({
       data: {
         name: 'Default',
         permissions: {
@@ -27,15 +30,14 @@ describe('List Users Operations (Integration)', () => {
       }
     });
 
-    // 3. Criar usuários para popular a lista
-    // Criamos o Luca
+    // 3. Criar usuários via rota de cadastro 
+    // (Isso garante que o UseCase atribua a role 'Default' automaticamente)
     await request(app).post('/cadastro').send({
       name: 'Luca List',
       email: 'luca.list@teste.com',
       password: 'password123'
     });
 
-    // Criamos um segundo usuário para garantir que a lista tenha mais de um
     await request(app).post('/cadastro').send({
       name: 'Outro Usuario',
       email: 'outro@teste.com',
@@ -56,23 +58,25 @@ describe('List Users Operations (Integration)', () => {
       .get('/listar-usuarios')
       .set('Authorization', `Bearer ${userToken}`);
 
+    // Se retornar 403 aqui, significa que a role do usuário não tem a USER_READ
     expect(response.status).toBe(200);
 
-    // DEBUG: Se o teste falhar de novo, descomente a linha abaixo para ver o que está vindo
-    // console.log(response.body);
-
-    // Se sua lista vier dentro de um objeto (ex: response.body.users)
-    // mude para: expect(Array.isArray(response.body.users)).toBe(true);
-    
-    // Se ela vier direto, mas o erro persistir, pode ser que venha um objeto de paginação.
-    // Vamos ser mais flexíveis para encontrar a lista:
+    // Ajuste aqui conforme o retorno do seu Controller:
+    // Se você retorna { users: [...] }, usamos response.body.users
     const usersList = Array.isArray(response.body) ? response.body : response.body.users;
 
     expect(Array.isArray(usersList)).toBe(true);
     expect(usersList.length).toBeGreaterThanOrEqual(2);
     
-    // Verifica o primeiro item da lista
-    expect(usersList[0]).not.toHaveProperty('password');
-    expect(usersList[0]).toHaveProperty('email');
+    // Verificações de Segurança: Senhas NUNCA devem ser listadas
+    const firstUser = usersList[0];
+    expect(firstUser).not.toHaveProperty('password');
+    expect(firstUser).toHaveProperty('email');
+    expect(firstUser).toHaveProperty('name');
+  });
+
+  it('deve retornar 401 se tentar listar sem token', async () => {
+    const response = await request(app).get('/listar-usuarios');
+    expect(response.status).toBe(401);
   });
 });

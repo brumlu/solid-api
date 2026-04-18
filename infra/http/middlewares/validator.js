@@ -2,21 +2,26 @@ import { ZodError } from 'zod';
 
 export const validate = (schema) => (req, res, next) => {
   try {
-    // Tenta validar o body. O parse() retorna o objeto limpo ou lança erro.
     schema.parse(req.body);
-    next(); // Passou na triagem! Vai para o Controller.
+    next();
   } catch (error) {
     if (error instanceof ZodError) {
+      // Adicionamos uma verificação de segurança (Optional Chaining) 
+      // e um fallback para array vazio caso error.errors seja undefined
+      const details = (error.errors || []).map(err => ({
+        path: err.path ? err.path[0] : 'campo',
+        message: err.message
+      }));
+
       return res.status(400).json({
         status: 'error',
         message: 'Dados inválidos',
-        // Mapeia os erros para ficarem amigáveis para o Front-end
-        details: error.errors.map(err => ({
-          path: err.path[0],
-          message: err.message
-        }))
+        details: details
       });
     }
-    return res.status(500).json({ message: 'Erro interno no servidor' });
+
+    // Se não for um erro do Zod, jogue para o Error Handler Global 
+    // em vez de retornar 500 manualmente aqui.
+    next(error);
   }
 };
