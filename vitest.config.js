@@ -6,10 +6,10 @@ export default defineConfig({
     environment: 'node',
     coverage: {
       provider: 'v8', // ou 'istanbul'
-      reporter: ['text', 'json', 'html'], // 'html' gera o relatório visual
-      reportsDirectory: './coverage', // onde o relatório será salvo
-      include: ['usecase/**'], // Foca nos seus Use Cases
-      exclude: ['node_modules/', 'infra/**'], // Ignora infraestrutura
+      reporter: ['text', 'json', 'html'],
+      reportsDirectory: './coverage',
+      include: ['usecase/**'],
+      exclude: ['node_modules/', 'infra/**'],
     },
   },
 });
