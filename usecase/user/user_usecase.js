@@ -7,7 +7,6 @@ import {
 } from '../../model/errors/AppError.js';
 import { Roles } from '../../model/constants/roles.js'; // Exemplo de constante
 
-// 1. Criar Usuário
 export class CreateUser {
   constructor(userRepository, hashProvider) {
     this.userRepository = userRepository;
@@ -34,7 +33,6 @@ export class CreateUser {
   }
 }
 
-// 2. Login de Usuário
 export class LoginUser {
   constructor(userRepository, hashProvider, tokenProvider) {
     this.userRepository = userRepository;
@@ -68,7 +66,6 @@ export class LoginUser {
   }
 }
 
-// 3. Listar Usuários
 export class ListUsers {
   constructor(userRepository) { 
     this.userRepository = userRepository; 
@@ -79,7 +76,6 @@ export class ListUsers {
   }
 }
 
-// 4. Atualizar Dados Básicos
 export class UpdateUser {
   constructor(userRepository) { 
     this.userRepository = userRepository; 
@@ -93,7 +89,6 @@ export class UpdateUser {
   }
 }
 
-// 5. Atualizar Senha
 export class UpdateUserPassword {
   constructor(userRepository, hashProvider) { 
     this.userRepository = userRepository; 
@@ -116,7 +111,6 @@ export class UpdateUserPassword {
   }
 }
 
-// 6. Deletar Usuário
 export class DeleteUser {
   constructor(userRepository) { 
     this.userRepository = userRepository; 
@@ -131,7 +125,6 @@ export class DeleteUser {
   }
 }
 
-// 7. Alterar Cargo
 export class ChangeUserRole {
   constructor(userRepository) { 
     this.userRepository = userRepository; 
