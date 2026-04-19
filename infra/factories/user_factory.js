@@ -15,24 +15,24 @@ import {
 import { PublicUserController } from '../http/controller/public_user_controller.js';
 import { PrivateUserController } from '../http/controller/private_user_controller.js';
 
-// 1. Instâncias de Infra (Compartilhadas para economizar memória)
+// Instâncias de Infra (Compartilhadas para economizar memória)
 const userRepository = new UserRepository();
 const hashProvider = new HashProvider();
 const tokenProvider = new TokenProvider();
 
 export const makePublicUserController = () => {
-  // 2. Injeção nos casos de uso públicos
+  // Injeção nos casos de uso públicos
   const createUserUseCase = new CreateUser(userRepository, hashProvider);
   const loginUserUseCase = new LoginUser(userRepository, hashProvider, tokenProvider);
 
-  // 3. Retorna o controller pronto
+  // Retorna o controller pronto
   return new PublicUserController(createUserUseCase, loginUserUseCase);
 };
 
 export const makePrivateUserController = () => {
   const masterKey = process.env.MASTER_KEY;
 
-  // 4. Agrupamento de casos de uso privados
+  // Agrupamento de casos de uso privados
   const useCases = {
     listUsers: new ListUsers(userRepository),
     updateUser: new UpdateUser(userRepository),
