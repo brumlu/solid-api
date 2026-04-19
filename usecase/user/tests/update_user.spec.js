@@ -19,7 +19,7 @@ describe('Update User (Integration)', () => {
   };
 
   beforeAll(async () => {
-    // 1. Limpeza
+    // 1. Limpeza do banco
     await prisma.users.deleteMany();
     
     await prisma.role.upsert({
@@ -28,14 +28,14 @@ describe('Update User (Integration)', () => {
       create: { name: 'Default' }
     });
 
-    // 2. Cria o usuário
+    // 2. Cria o usuário via rota de registro
     const registerRes = await request(app)
       .post('/register')
       .send(originalUser);
     
     userId = registerRes.body.userId;
 
-    // 3. Login
+    // 3. Login para obter o token
     const loginRes = await request(app)
       .post('/login')
       .send({
@@ -52,7 +52,6 @@ describe('Update User (Integration)', () => {
       .set('Authorization', `Bearer ${userToken}`)
       .send(updatedData);
 
-    // O status deve ser 200 conforme seu PrivateUserController.atualizar
     expect(response.status).toBe(200);
     expect(response.body.message).toMatch(/sucesso/i);
   });
@@ -75,13 +74,16 @@ describe('Update User (Integration)', () => {
     });
     const secondUserId = secondUserRes.body.userId;
 
-    // 2. O primeiro usuário (Luca) tenta atualizar o segundo (Outro)
+    // 2. Tentativa de alteração (Enviando dados completos para passar no Zod)
     const response = await request(app)
       .patch(`/users-update/${secondUserId}`)
       .set('Authorization', `Bearer ${userToken}`)
-      .send({ name: 'Hacker' });
+      .send({ 
+        name: 'Tentativa Hacker', 
+        email: 'hacker@email.com' 
+      });
 
-    // O middleware isOwnerOrAdmin barra com 403
+    // O middleware isOwnerOrAdmin deve barrar com 403 antes de chegar no Use Case
     expect(response.status).toBe(403);
   });
 
@@ -94,15 +96,17 @@ describe('Update User (Integration)', () => {
   });
 
   it('deve retornar 404 se tentar atualizar um usuário que não existe', async () => {
-    // Geramos um ID que não existe (ex: 9999)
+    // ID 9999 não existe. Enviamos dados válidos para o Zod não barrar com 400.
     const response = await request(app)
       .patch('/users-update/9999')
       .set('Authorization', `Bearer ${userToken}`)
-      .send({ name: 'Inexistente' });
+      .send({ 
+        name: 'Usuario Inexistente', 
+        email: 'inexistente@email.com' 
+      });
 
-    // Como seu isOwnerOrAdmin só permite o próprio ID, ele pode retornar 403 antes do 404,
-    // ou se você for Admin, o UseCase retornará o ResourceNotFoundError (404).
-    // Se o middleware isOwnerOrAdmin for rígido, o resultado será 403.
+    // Se o middleware isOwnerOrAdmin for verificado primeiro, será 403.
+    // Se o sistema permitir a busca, será 404.
     expect([403, 404]).toContain(response.status);
   });
 });
