@@ -12,8 +12,6 @@ import { validate } from './middlewares/validator.js';
 import { createUserSchema, loginUserSchema, updateProfileSchema, updatePasswordSchema } from '../schemas/user_schemas.js';
 
 import { createProductSchema, updateProductSchema } from '../schemas/product_schemas.js'
-// Supondo que você criará os schemas de produto (vê a dica abaixo)
-// import { createProductSchema, updateProductSchema } from '../schemas/product_schemas.js';
 
 const router = Router();
 
