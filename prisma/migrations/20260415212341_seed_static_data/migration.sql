@@ -70,7 +70,7 @@ ALTER TABLE "role_permissions" ADD CONSTRAINT "role_permissions_roleId_fkey" FOR
 -- AddForeignKey
 ALTER TABLE "role_permissions" ADD CONSTRAINT "role_permissions_permissionId_fkey" FOREIGN KEY ("permissionId") REFERENCES "permissions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
--- 1. Inserir as Permissões
+-- Inserir as Permissões
 INSERT INTO "permissions" ("name", "description") VALUES 
 ('ADMIN_ACCESS', 'Acesso total ao sistema'),
 ('USER_READ', 'Permissão para ler dados de usuário'),
@@ -82,20 +82,20 @@ INSERT INTO "permissions" ("name", "description") VALUES
 ('PRODUCT_DELETE', 'Permissão para excluir produtos')
 ON CONFLICT ("name") DO NOTHING;
 
--- 2. Inserir os Cargos (Roles)
+-- Inserir os Cargos (Roles)
 INSERT INTO "roles" ("name", "description") VALUES 
 ('ADMIN', 'Administrador do sistema'),
 ('Default', 'Usuário padrão')
 ON CONFLICT ("name") DO NOTHING;
 
--- 3. Vincular Permissões ao ADMIN (Assumindo que IDs começam em 1)
+-- Vincular Permissões ao ADMIN (Assumindo que IDs começam em 1)
 -- Vincula ADMIN_ACCESS (ID 1) ao ADMIN (ID 1)
 INSERT INTO "role_permissions" ("roleId", "permissionId") 
 SELECT r.id, p.id FROM "roles" r, "permissions" p 
 WHERE r.name = 'ADMIN' AND p.name IN ('ADMIN_ACCESS', 'PRODUCT_CREATE', 'PRODUCT_READ', 'PRODUCT_UPDATE', 'PRODUCT_DELETE')
 ON CONFLICT DO NOTHING;
 
--- 4. Vincular Permissões ao Default (Usuário comum)
+-- Vincular Permissões ao Default (Usuário comum)
 INSERT INTO "role_permissions" ("roleId", "permissionId")
 SELECT r.id, p.id FROM "roles" r, "permissions" p 
 WHERE r.name = 'Default' AND p.name IN ('USER_READ', 'USER_UPDATE', 'USER_DELETE', 'PRODUCT_READ')
