@@ -5,7 +5,6 @@ import {
   AppError 
 } from '../../model/errors/AppError.js';
 
-// 1. Criar Produto
 export class CreateProduct {
   constructor(productRepository) {
     this.productRepository = productRepository;
@@ -29,7 +28,6 @@ export class CreateProduct {
   }
 }
 
-// 2. Listar Produtos
 export class ListProducts {
   constructor(productRepository) { 
     this.productRepository = productRepository; 
@@ -41,7 +39,6 @@ export class ListProducts {
   }
 }
 
-// 3. Atualizar Produto (Geral)
 export class UpdateProduct {
   constructor(productRepository) { 
     this.productRepository = productRepository; 
@@ -62,7 +59,6 @@ export class UpdateProduct {
   }
 }
 
-// 4. Deletar Produto
 export class DeleteProduct {
   constructor(productRepository) { 
     this.productRepository = productRepository; 
@@ -79,7 +75,6 @@ export class DeleteProduct {
   }
 }
 
-// 5. Atualizar Apenas Preço
 export class UpdateProductPrice {
   constructor(productRepository) { 
     this.productRepository = productRepository; 
@@ -96,7 +91,6 @@ export class UpdateProductPrice {
   }
 }
 
-// 6. Atualizar Apenas Estoque
 export class UpdateProductStock {
   constructor(productRepository) { 
     this.productRepository = productRepository; 
