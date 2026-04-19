@@ -41,7 +41,7 @@ model Role {
 
   users       Users[]
   
-  // Agora a relação aponta para a tabela intermediária explícita
+  // Aponta para a tabela intermediária explícita
   permissions RolePermission[]
 
   @@map("roles")
@@ -53,13 +53,12 @@ model Permission {
   description String? 
   createdAt   DateTime @default(now())
 
-  // Agora a relação aponta para a tabela intermediária explícita
+  // Aponta para a tabela intermediária explícita
   roles       RolePermission[]
 
   @@map("permissions")
 }
 
-// ESTA É A NOVA TABELA EXPLÍCITA
 model RolePermission {
   roleId       Int
   permissionId Int
