@@ -1,4 +1,3 @@
-// infra/http/middlewares/error_handler.js
 import { AppError } from '../../../model/errors/AppError.js';
 
 export function errorHandler(err, req, res, next) {
