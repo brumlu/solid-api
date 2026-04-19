@@ -48,7 +48,7 @@ export class ProductRepository {
   }
 
   async update(id, data) {
-    // Se o preço estiver no objeto de atualização, tratamos ele
+
     const updateData = { ...data };
     if (data.price !== undefined) {
       updateData.price = new Prisma.Decimal(data.price);
