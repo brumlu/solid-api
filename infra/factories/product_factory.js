@@ -10,12 +10,11 @@ import {
 
 import { ProductController } from '../http/controller/product_controller.js';
 
-// 1. Instância de Infra (Compartilhada)
+// Instância de Infra (Compartilhada)
 const productRepository = new ProductRepository();
 
 export const makeProductController = () => {
-  // 2. Agrupamento de casos de uso
-  // Seguindo seu padrão de passar um objeto 'useCases' para o controller
+  // Agrupamento de casos de uso
   const useCases = {
     createProduct: new CreateProduct(productRepository),
     listProducts: new ListProducts(productRepository),
@@ -25,6 +24,6 @@ export const makeProductController = () => {
     updatePrice: new UpdateProductPrice(productRepository)
   };
 
-  // 3. Retorna o controller pronto
+  // Retorna o controller pronto
   return new ProductController(useCases);
 };
