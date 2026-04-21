@@ -20,7 +20,7 @@ export class UserRepository {
 
   async findById(id) {
     const userData = await prisma.users.findUnique({ 
-      where: { id: Number(id) } 
+      where: { id: (id) } 
     });
     return this.#mapToEntity(userData);
   }
@@ -74,7 +74,7 @@ export class UserRepository {
 
   async update(id, data) {
     const updatedUser = await prisma.users.update({
-      where: { id: Number(id) },
+      where: { id: (id) },
       data
     });
     return this.#mapToEntity(updatedUser);
@@ -82,7 +82,7 @@ export class UserRepository {
 
   async delete(id) {
     const deletedUser = await prisma.users.delete({
-      where: { id: Number(id) }
+      where: { id: (id) }
     });
     return this.#mapToEntity(deletedUser);
   }

@@ -1,19 +1,22 @@
+-- Habilita a extensão de UUID se ainda não estiver ativa (comum no Postgres antigo, no 13+ já costuma vir nativo)
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
 -- CreateTable
 CREATE TABLE "users" (
-    "id" SERIAL NOT NULL,
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "name" TEXT,
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "roleId" INTEGER NOT NULL,
+    "roleId" UUID NOT NULL,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "products" (
-    "id" SERIAL NOT NULL,
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "name" TEXT NOT NULL,
     "description" TEXT,
     "price" DECIMAL(10,2) NOT NULL,
@@ -26,7 +29,7 @@ CREATE TABLE "products" (
 
 -- CreateTable
 CREATE TABLE "roles" (
-    "id" SERIAL NOT NULL,
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "name" TEXT NOT NULL,
     "description" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -36,7 +39,7 @@ CREATE TABLE "roles" (
 
 -- CreateTable
 CREATE TABLE "permissions" (
-    "id" SERIAL NOT NULL,
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "name" TEXT NOT NULL,
     "description" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -44,21 +47,17 @@ CREATE TABLE "permissions" (
     CONSTRAINT "permissions_pkey" PRIMARY KEY ("id")
 );
 
--- CreateTable
+-- CreateTable (Tabela intermediária com FKs do tipo UUID)
 CREATE TABLE "role_permissions" (
-    "roleId" INTEGER NOT NULL,
-    "permissionId" INTEGER NOT NULL,
+    "roleId" UUID NOT NULL,
+    "permissionId" UUID NOT NULL,
 
     CONSTRAINT "role_permissions_pkey" PRIMARY KEY ("roleId","permissionId")
 );
 
 -- CreateIndex
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
-
--- CreateIndex
 CREATE UNIQUE INDEX "roles_name_key" ON "roles"("name");
-
--- CreateIndex
 CREATE UNIQUE INDEX "permissions_name_key" ON "permissions"("name");
 
 -- AddForeignKey
@@ -69,6 +68,10 @@ ALTER TABLE "role_permissions" ADD CONSTRAINT "role_permissions_roleId_fkey" FOR
 
 -- AddForeignKey
 ALTER TABLE "role_permissions" ADD CONSTRAINT "role_permissions_permissionId_fkey" FOREIGN KEY ("permissionId") REFERENCES "permissions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+---
+--- SEED DATA (A parte do INSERT continua funcionando dinamicamente)
+---
 
 -- Inserir as Permissões
 INSERT INTO "permissions" ("name", "description") VALUES 
@@ -88,8 +91,7 @@ INSERT INTO "roles" ("name", "description") VALUES
 ('Default', 'Usuário padrão')
 ON CONFLICT ("name") DO NOTHING;
 
--- Vincular Permissões ao ADMIN (Assumindo que IDs começam em 1)
--- Vincula ADMIN_ACCESS (ID 1) ao ADMIN (ID 1)
+-- Vincular Permissões ao ADMIN (Buscando IDs via Subquery, já que são UUIDs aleatórios)
 INSERT INTO "role_permissions" ("roleId", "permissionId") 
 SELECT r.id, p.id FROM "roles" r, "permissions" p 
 WHERE r.name = 'ADMIN' AND p.name IN ('ADMIN_ACCESS', 'PRODUCT_CREATE', 'PRODUCT_READ', 'PRODUCT_UPDATE', 'PRODUCT_DELETE')

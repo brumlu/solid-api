@@ -86,7 +86,7 @@ describe('Delete Product (Integration)', () => {
 
   it('deve retornar 404 ao tentar deletar um produto que não existe', async () => {
     const response = await request(app)
-      .delete('/products/999999')
+      .delete('/products/00000000-0000-0000-0000-000000000000')
       .set('Authorization', `Bearer ${adminToken}`);
 
     // Se o seu UseCase lança um erro de "não encontrado", deve ser 404

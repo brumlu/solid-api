@@ -134,7 +134,7 @@ export class ChangeUserRole {
     const user = await this.userRepository.findById(id);
     if (!user) return left(new ResourceNotFoundError('Usuário'));
 
-    const updated = await this.userRepository.update(id, { roleId: Number(roleId) });
+    const updated = await this.userRepository.update(id, { roleId: (roleId) });
     return right(updated);
   }
   

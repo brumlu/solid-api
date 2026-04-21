@@ -22,7 +22,7 @@ export class ProductRepository {
 
   async findById(id) {
     const productData = await prisma.products.findUnique({ 
-      where: { id: Number(id) } 
+      where: { id: (id) } 
     });
     return this.#mapToEntity(productData);
   }
@@ -55,7 +55,7 @@ export class ProductRepository {
     }
 
     const updatedProduct = await prisma.products.update({
-      where: { id: Number(id) },
+      where: { id: (id) },
       data: updateData
     });
 
@@ -64,7 +64,7 @@ export class ProductRepository {
 
   async delete(id) {
     const deletedProduct = await prisma.products.delete({
-      where: { id: Number(id) }
+      where: { id: (id) }
     });
     return this.#mapToEntity(deletedProduct);
   }

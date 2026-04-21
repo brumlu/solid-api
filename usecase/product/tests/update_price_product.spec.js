@@ -84,7 +84,7 @@ describe('Update Product Price (Integration)', () => {
 
   it('deve retornar 404 ao tentar atualizar preço de produto inexistente', async () => {
     // Usamos um UUID no formato correto para evitar erro 500 de sintaxe do banco
-    const fakeId = '999999';
+    const fakeId = '00000000-0000-0000-0000-000000000000';
 
     const response = await request(app)
       .patch(`/products/${fakeId}/price`)

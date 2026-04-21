@@ -60,7 +60,7 @@ describe('Change User Role (Integration)', () => {
 
     // 6. Promover o usuário para ADMIN no banco de dados
     await prisma.users.update({
-      where: { id: Number(adminId) },
+      where: { id: (adminId) },
       data: { roleId: adminRoleId }
     });
 
@@ -83,7 +83,7 @@ describe('Change User Role (Integration)', () => {
 
     // Garantir que ele seja 'Default'
     await prisma.users.update({
-      where: { id: Number(commonUserId) },
+      where: { id: (commonUserId) },
       data: { roleId: defaultRoleId }
     });
   });
@@ -102,7 +102,7 @@ describe('Change User Role (Integration)', () => {
 
   it('deve verificar no banco de dados se a role do usuário foi realmente alterada', async () => {
     const updatedUser = await prisma.users.findUnique({
-      where: { id: Number(commonUserId) }
+      where: { id: (commonUserId) }
     });
 
     expect(updatedUser.roleId).toBe(adminRoleId);
@@ -111,7 +111,7 @@ describe('Change User Role (Integration)', () => {
   it('deve impedir que um usuário comum tente alterar a própria role (403)', async () => {
     // Primeiro voltamos o usuário para Default para garantir o teste de segurança
     await prisma.users.update({
-      where: { id: Number(commonUserId) },
+      where: { id: (commonUserId) },
       data: { roleId: defaultRoleId }
     });
 

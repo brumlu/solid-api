@@ -8,24 +8,26 @@ datasource db {
 }
 
 model Users {
-  id        Int      @id @default(autoincrement())
+  // Alterado de Int para String com default uuid()
+  id        String   @id @default(uuid()) 
   name      String?
   email     String   @unique
   password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  roleId    Int
+  // O campo que armazena a FK também deve ser String
+  roleId    String
   role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@map("users")
 }
 
 model Products {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(uuid())
   name        String
   description String?
-  price       Decimal  @db.Decimal(10, 2) // Total de 10 dígitos, sendo 2 decimais
+  price       Decimal  @db.Decimal(10, 2)
   stock       Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -34,40 +36,36 @@ model Products {
 }
 
 model Role {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(uuid())
   name        String   @unique
   description String?
   createdAt   DateTime @default(now())
 
   users       Users[]
-  
-  // Aponta para a tabela intermediária explícita
   permissions RolePermission[]
 
   @@map("roles")
 }
 
 model Permission {
-  id          Int      @id @default(autoincrement())
+  id          String   @id @default(uuid())
   name        String   @unique
   description String? 
   createdAt   DateTime @default(now())
 
-  // Aponta para a tabela intermediária explícita
   roles       RolePermission[]
 
   @@map("permissions")
 }
 
 model RolePermission {
-  roleId       Int
-  permissionId Int
+  // Ambas as FKs agora são String para coincidir com os IDs originais
+  roleId       String
+  permissionId String
   
-  // Define quem são os "pais" desta relação
-  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
-  // Define a chave primária composta (evita duplicatas da mesma permissão na mesma role)
   @@id([roleId, permissionId])
-  @@map("role_permissions") // Nome da tabela no banco
+  @@map("role_permissions")
 }

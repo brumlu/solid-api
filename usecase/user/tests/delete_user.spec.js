@@ -64,7 +64,7 @@ describe('Delete User (Integration)', () => {
 
   it('deve garantir que o usuário realmente sumiu do banco de dados', async () => {
     const userInDb = await prisma.users.findUnique({
-      where: { id: Number(userId) }
+      where: { id: (userId) }
     });
 
     expect(userInDb).toBeNull();

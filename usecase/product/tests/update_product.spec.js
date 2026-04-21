@@ -120,7 +120,7 @@ describe('Update Product General (Integration)', () => {
 
   it('deve retornar 404 para produto inexistente no PATCH', async () => {
     const response = await request(app)
-      .patch('/products/99999') // Alterado para PATCH
+      .patch('/products/00000000-0000-0000-0000-000000000000') // Alterado para PATCH
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ name: 'Inexistente' });
 

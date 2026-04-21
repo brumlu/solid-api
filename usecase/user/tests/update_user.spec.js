@@ -58,7 +58,7 @@ describe('Update User (Integration)', () => {
 
   it('deve garantir que o nome e e-mail foram alterados no banco', async () => {
     const userInDb = await prisma.users.findUnique({
-      where: { id: Number(userId) }
+      where: { id: (userId) }
     });
 
     expect(userInDb.name).toBe(updatedData.name);
@@ -96,9 +96,9 @@ describe('Update User (Integration)', () => {
   });
 
   it('deve retornar 404 se tentar atualizar um usuário que não existe', async () => {
-    // ID 9999 não existe. Enviamos dados válidos para o Zod não barrar com 400.
+    // ID 00000000-0000-0000-0000-000000000000 não existe. Enviamos dados válidos para o Zod não barrar com 400.
     const response = await request(app)
-      .patch('/users-update/9999')
+      .patch('/users-update/00000000-0000-0000-0000-000000000000')
       .set('Authorization', `Bearer ${userToken}`)
       .send({ 
         name: 'Usuario Inexistente', 

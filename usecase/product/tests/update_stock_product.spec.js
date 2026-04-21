@@ -81,7 +81,7 @@ describe('Update Product Stock (Integration)', () => {
   });
 
   it('deve retornar 404 ao tentar atualizar estoque de produto inexistente', async () => {
-    const fakeId = '999999';
+    const fakeId = '00000000-0000-0000-0000-000000000000';
 
     const response = await request(app)
       .patch(`/products/${fakeId}/stock`)
