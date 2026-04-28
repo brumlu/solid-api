@@ -27,7 +27,7 @@ describe('Login Operations (Integration)', () => {
       .send(loginUser);
   });
 
-  it('deve ser capaz de autenticar um usuário e receber um token JWT', async () => {
+  it('deve ser capaz de autenticar um usuário e receber um cookie HttpOnly', async () => {
     const response = await request(app)
       .post('/login')
       .send({
@@ -36,9 +36,22 @@ describe('Login Operations (Integration)', () => {
       });
 
     expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('token');
-    // Verifica se o token parece um JWT válido
-    expect(response.body.token).toMatch(/^ey/);
+    
+    // 1. O corpo da resposta NÃO deve mais conter o token (por segurança)
+    expect(response.body.token).toBeUndefined();
+
+    // 2. Verificamos se o cookie foi enviado no cabeçalho
+    const cookies = response.header['set-cookie'];
+    expect(cookies).toBeDefined();
+
+    // 3. Validamos se o cookie específico 'api_token' está lá e contém as flags
+    const authCookie = cookies.find(cookie => cookie.includes('api_token'));
+    expect(authCookie).toBeDefined();
+    expect(authCookie).toMatch(/HttpOnly/);
+    expect(authCookie).toMatch(/Path=\//);
+    
+    // Verifica se o valor do token dentro do cookie começa com o padrão JWT (ey...)
+    expect(authCookie).toMatch(/api_token=ey/);
   });
 
   it('não deve logar com uma senha incorreta', async () => {
@@ -49,10 +62,11 @@ describe('Login Operations (Integration)', () => {
         password: 'senha_errada'
       });
 
-    // O ErrorHandler deve retornar 401 (Unauthorized)
     expect(response.status).toBe(401);
     expect(response.body.message).toMatch(/inválid/i); 
-    expect(response.body.token).toBeUndefined();
+    
+    // Garante que o cookie NÃO foi enviado em caso de falha
+    expect(response.header['set-cookie']).toBeUndefined();
   });
 
   it('não deve logar com um e-mail que não existe no sistema', async () => {
@@ -63,18 +77,17 @@ describe('Login Operations (Integration)', () => {
         password: 'password123'
       });
 
-    // Segurança: Retornamos 401 mesmo se o e-mail não existir para evitar enumeração de usuários
+    // Segurança: 401 para evitar enumeração de e-mails
     expect(response.status).toBe(401);
-    expect(response.body.message).toMatch(/inválid/i);
+    expect(response.header['set-cookie']).toBeUndefined();
   });
 
   it('deve retornar erro 400 se o corpo da requisição estiver incompleto', async () => {
     const response = await request(app)
       .post('/login')
-      .send({ email: loginUser.email }); // Faltando password
+      .send({ email: loginUser.email });
 
-    // Aqui o seu Middleware de Validação (Zod) deve atuar
     expect(response.status).toBe(400);
-    expect(response.body).toHaveProperty('details'); // O mapeamento amigável que fizemos no validator.js
+    expect(response.body).toHaveProperty('details');
   });
 });

@@ -4,7 +4,7 @@ import { app } from '../../../cmd/main.js'
 import prisma from '../../../infra/database/prisma.js'
 
 describe('Update Password (Integration)', () => {
-  let userToken = '';
+  let userCookie = [];
   let userId = null;
 
   const userCredentials = {
@@ -15,7 +15,7 @@ describe('Update Password (Integration)', () => {
   };
 
   beforeAll(async () => {
-    // 1. Limpeza
+    // 1. Limpeza total
     await prisma.users.deleteMany();
 
     await prisma.role.upsert({
@@ -31,23 +31,23 @@ describe('Update Password (Integration)', () => {
       password: userCredentials.oldPassword
     });
 
-    // Captura o userId do corpo da resposta
     userId = registerRes.body.userId;
 
-    // 3. Login inicial para obter o token de autorização
+    // 3. Login inicial para obter o Cookie HttpOnly
     const loginRes = await request(app).post('/login').send({
       email: userCredentials.email,
       password: userCredentials.oldPassword
     });
-    userToken = loginRes.body.token;
+    
+    // Captura o cabeçalho 'set-cookie' (api_token)
+    userCookie = loginRes.header['set-cookie'];
   });
 
   it('deve ser capaz de alterar a própria senha usando o ID na rota', async () => {
     const response = await request(app)
       .patch(`/password-update/${userId}`) 
-      .set('Authorization', `Bearer ${userToken}`)
+      .set('Cookie', userCookie) // Enviando o cookie api_token
       .send({
-        // Verifique se o seu DTO/Zod espera "password"
         password: userCredentials.newPassword 
       });
 
@@ -55,7 +55,7 @@ describe('Update Password (Integration)', () => {
     expect(response.body.message).toMatch(/sucesso/i);
   });
 
-  it('deve conseguir logar com a nova senha', async () => {
+  it('deve conseguir logar com a nova senha e receber novo cookie', async () => {
     const response = await request(app)
       .post('/login')
       .send({
@@ -64,7 +64,10 @@ describe('Update Password (Integration)', () => {
       });
 
     expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('token');
+    
+    // Verifica se o cookie api_token foi enviado na resposta
+    const cookies = response.header['set-cookie'];
+    expect(cookies.find(c => c.includes('api_token'))).toBeDefined();
   });
 
   it('NÃO deve conseguir logar com a senha antiga', async () => {
@@ -75,13 +78,12 @@ describe('Update Password (Integration)', () => {
         password: userCredentials.oldPassword
       });
 
-    // O ErrorHandler deve garantir o 401 para credenciais inválidas
     expect(response.status).toBe(401);
     expect(response.body.message).toMatch(/inválid/i);
   });
 
-  it('deve retornar 403 se tentar alterar a senha de outro usuário', async () => {
-    // 1. Criar um segundo usuário
+  it('deve retornar 403 se tentar alterar a senha de outro usuário (Segurança)', async () => {
+    // 1. Criar um segundo usuário (Vítima)
     const secondUser = await request(app).post('/register').send({
       name: 'Vítima',
       email: 'vitima@teste.com',
@@ -89,13 +91,13 @@ describe('Update Password (Integration)', () => {
     });
     const secondUserId = secondUser.body.userId;
 
-    // 2. O usuário "Luca" tenta mudar a senha da "Vítima"
+    // 2. O usuário "Luca" tenta mudar a senha da "Vítima" enviando o SEU cookie
     const response = await request(app)
       .patch(`/password-update/${secondUserId}`)
-      .set('Authorization', `Bearer ${userToken}`)
+      .set('Cookie', userCookie)
       .send({ password: 'hackedPassword' });
 
-    // O middleware isOwnerOrAdmin deve barrar com 403
+    // O middleware de autorização (isOwnerOrAdmin) deve barrar
     expect(response.status).toBe(403);
   });
 });

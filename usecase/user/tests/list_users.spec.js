@@ -4,18 +4,17 @@ import { app } from '../../../cmd/main.js'
 import prisma from '../../../infra/database/prisma.js'
 
 describe('List Users Operations (Integration)', () => {
-  let userToken = '';
+  let userCookie = [];
 
   beforeAll(async () => {
     // 1. Limpeza profunda respeitando a integridade referencial
-    // (A ordem importa se houver Foreign Keys)
     if (prisma.rolePermission) await prisma.rolePermission.deleteMany();
     await prisma.users.deleteMany();
     await prisma.permission.deleteMany();
     await prisma.role.deleteMany();
 
     // 2. Setup de Permissões
-    // O seu middleware 'checkPermission' provavelmente busca por este nome:
+    // O seu middleware 'checkPermission' busca por este nome:
     const permission = await prisma.permission.create({
       data: { name: 'USER_READ' }
     });
@@ -25,13 +24,15 @@ describe('List Users Operations (Integration)', () => {
       data: {
         name: 'Default',
         permissions: {
-          create: [{ permission: { connect: { id: permission.id } } }]
+          create: [{ 
+            permission: { connect: { id: permission.id } } 
+          }]
         }
       }
     });
 
     // 3. Criar usuários via rota de cadastro 
-    // (Isso garante que o UseCase atribua a role 'Default' automaticamente)
+    // (Garante que o UseCase atribua a role 'Default' automaticamente)
     await request(app).post('/register').send({
       name: 'Luca List',
       email: 'luca.list@teste.com',
@@ -44,25 +45,25 @@ describe('List Users Operations (Integration)', () => {
       password: 'password123'
     });
 
-    // 4. Login para obter o token
+    // 4. Login para obter o COOKIE HttpOnly
     const loginRes = await request(app).post('/login').send({
       email: 'luca.list@teste.com',
       password: 'password123'
     });
     
-    userToken = loginRes.body.token;
+    // Captura o cabeçalho 'set-cookie'
+    userCookie = loginRes.header['set-cookie'];
   });
 
   it('deve ser capaz de listar todos os usuários cadastrados', async () => {
     const response = await request(app)
       .get('/users')
-      .set('Authorization', `Bearer ${userToken}`);
+      .set('Cookie', userCookie); // Enviando o cookie em vez do Bearer token
 
-    // Se retornar 403 aqui, significa que a role do usuário não tem a USER_READ
+    // Se retornar 403 aqui, verifique se a Role no banco realmente recebeu USER_READ
     expect(response.status).toBe(200);
 
-    // Ajuste aqui conforme o retorno do seu Controller:
-    // Se você retorna { users: [...] }, usamos response.body.users
+    // Ajuste conforme o retorno do seu Controller: { users: [...] } ou [...]
     const usersList = Array.isArray(response.body) ? response.body : response.body.users;
 
     expect(Array.isArray(usersList)).toBe(true);
@@ -75,8 +76,9 @@ describe('List Users Operations (Integration)', () => {
     expect(firstUser).toHaveProperty('name');
   });
 
-  it('deve retornar 401 se tentar listar sem token', async () => {
+  it('deve retornar 401 se tentar listar sem o cookie de sessão', async () => {
     const response = await request(app).get('/users');
+    
     expect(response.status).toBe(401);
   });
 });
