@@ -83,4 +83,16 @@ export class PrivateUserController {
 
     return res.status(200).json({ message: "Promovido a Admin" });
   }
+
+  async logout(req, res) {
+    // Limpa o cookie chamado 'api_token'
+    res.clearCookie('api_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+      path: '/', // Importante: deve ser o mesmo path usado na criação
+    });
+
+    return res.status(200).json({ message: 'Logout realizado com sucesso.' });
+  }
 }

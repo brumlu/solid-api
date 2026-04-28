@@ -36,6 +36,8 @@ router.patch('/setup-admin/:id', privateUserController.setupAdmin);
 
 router.delete('/users/:id', auth, isOwnerOrAdmin, privateUserController.deletar);
 
+router.post('/logout', auth, (req, res) => privateUserController.logout(req, res));
+
 // --- ROTAS PRIVADAS: PRODUTOS ---
 
 // Listar produtos (Permissão PRODUCT_READ para Admin e Default)
