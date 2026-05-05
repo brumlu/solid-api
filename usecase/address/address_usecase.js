@@ -1,3 +1,12 @@
+import { left, right } from "../../shared/core/Either.js"
+import { 
+  UserAlreadyExistsError, 
+  InvalidCredentialsError, 
+  ResourceNotFoundError,
+  NotAllowedError
+} from '../../model/errors/AppError.js';
+
+
 export class AddAddressUseCase {
   constructor(addressRepository, userRepository) {
     this.addressRepository = addressRepository;
@@ -7,7 +16,9 @@ export class AddAddressUseCase {
   async execute({ userId, isDefault, ...addressData }) {
     // 1. Validar se o usuário existe
     const user = await this.userRepository.findById(userId);
-    if (!user) throw new Error("Usuário não encontrado");
+    if (!user) {
+      return left(new ResourceNotFoundError("Usuário"));
+    }
 
     // 2. Criar o endereço
     const newAddress = await this.addressRepository.create({
@@ -15,13 +26,12 @@ export class AddAddressUseCase {
       userId
     });
 
-    // 3. Regra de Negócio: Se for o primeiro endereço OU isDefault for true,
-    // atualizamos o defaultAddressId no Usuário (Opção 2 Rigorosa)
+    // 3. Regra de Negócio: Se for o primeiro endereço OU isDefault for true
     if (isDefault || !user.defaultAddressId) {
       await this.userRepository.updateDefaultAddress(userId, newAddress.id);
     }
 
-    return newAddress;
+    return right(newAddress);
   }
 }
 
@@ -31,8 +41,8 @@ export class ListUserAddressesUseCase {
   }
 
   async execute(userId) {
-    // Retorna a lista de entidades Address
-    return await this.addressRepository.findByUserId(userId);
+    const addresses = await this.addressRepository.findByUserId(userId);
+    return right(addresses);
   }
 }
 
@@ -42,16 +52,24 @@ export class SetDefaultAddressUseCase {
     this.addressRepository = addressRepository;
   }
 
-  async execute(userId, addressId) {
-    // 1. Validar se o endereço existe e pertence ao usuário
+  async execute({ userId, addressId }) {
+    // 1. Validar se o endereço existe
     const address = await this.addressRepository.findById(addressId);
     
-    if (!address || address.userId !== userId) {
-      throw new Error("Endereço não encontrado ou não pertence a este usuário");
+    if (!address) {
+      return left(new ResourceNotFoundError("Endereço"));
     }
 
-    // 2. Atualizar o ponteiro no usuário
-    return await this.userRepository.updateDefaultAddress(userId, addressId);
+    // 2. Verificar se pertence ao usuário
+    // Usando String() para evitar erros de comparação de tipos UUID do Prisma
+    if (String(address.userId) !== String(userId)) {
+      return left(new NotAllowedError("Este endereço não pertence a este usuário"));
+    }
+
+    // 3. Atualizar o ponteiro no usuário
+    await this.userRepository.updateDefaultAddress(userId, addressId);
+    
+    return right(null);
   }
 }
 
@@ -62,27 +80,20 @@ export class DeleteAddressUseCase {
   }
 
   async execute({ userId, addressId, userRole }) {
-    // 1. Busca o endereço para verificar se ele existe
     const address = await this.addressRepository.findById(addressId);
 
     if (!address) {
-      return left(new ResourceNotFoundError("Endereço não encontrado"));
+      return left(new ResourceNotFoundError("Endereço"));
     }
 
-    // 2. Validação de Permissão:
-    // O usuário só pode deletar se for o DONO do endereço OU se for um ADMIN
-    const isOwner = address.userId === userId;
+    const isOwner = String(address.userId) === String(userId);
     const isAdmin = userRole === 'ADMIN';
 
     if (!isOwner && !isAdmin) {
-      return left(new NotAllowedError("Você não tem permissão para excluir este endereço"));
+      return left(new NotAllowedError("Sem permissão para excluir este endereço"));
     }
 
-    // 3. Executa a deleção
     await this.addressRepository.delete(addressId);
-
-    // Como o Prisma está com ON DELETE SET NULL no defaultAddressId do User,
-    // o vínculo no perfil do usuário será limpo automaticamente pelo banco.
 
     return right(null);
   }
@@ -97,10 +108,10 @@ export class GetDefaultAddressUseCase {
     const defaultAddress = await this.addressRepository.findDefaultByUserId(userId);
     
     if (!defaultAddress) {
-      throw new Error("Usuário não possui um endereço padrão definido");
+      return left(new ResourceNotFoundError("Endereço padrão"));
     }
 
-    return defaultAddress;
+    return right(defaultAddress);
   }
 }
 
@@ -113,8 +124,7 @@ export class GetAddressByIdUseCase {
     const address = await this.addressRepository.findById(addressId);
 
     if (!address) {
-      // Retorna erro padrão do seu sistema (Left)
-      return left(new ResourceNotFoundError("Endereço não encontrado"));
+      return left(new ResourceNotFoundError("Endereço"));
     }
 
     return right(address);

@@ -18,3 +18,7 @@ export class InvalidCredentialsError extends AppError {
 export class ResourceNotFoundError extends AppError {
   constructor(resource = 'Recurso') { super(`${resource} não encontrado.`, 404); }
 }
+
+export class NotAllowedError extends AppError {
+  constructor(resource = 'Acesso não permitido') { super(`${resource}`, 403); }
+}

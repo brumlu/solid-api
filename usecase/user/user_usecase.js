@@ -3,7 +3,8 @@ import { left, right } from '../../shared/core/Either.js';
 import { 
   UserAlreadyExistsError, 
   InvalidCredentialsError, 
-  ResourceNotFoundError 
+  ResourceNotFoundError,
+  NotAllowedError
 } from '../../model/errors/AppError.js';
 import { Roles } from '../../model/constants/roles.js'; // Exemplo de constante
 
@@ -151,38 +152,28 @@ export class ChangeUserRole {
 }
 
 export class SetDefaultAddressUseCase {
-  /**
-   * @param {UserRepository} userRepository
-   * @param {AddressRepository} addressRepository
-   */
   constructor(userRepository, addressRepository) {
     this.userRepository = userRepository;
     this.addressRepository = addressRepository;
   }
 
   async execute({ userId, addressId }) {
-    // 1. Validar se o usuário existe
     const user = await this.userRepository.findById(userId);
-    if (!user) {
-      throw new Error("Usuário não encontrado.");
-    }
+    if (!user) return left(new ResourceNotFoundError("Usuário"));
 
-    // 2. Validar se o endereço existe
     const address = await this.addressRepository.findById(addressId);
-    if (!address) {
-      throw new Error("Endereço não encontrado.");
+    if (!address) return left(new ResourceNotFoundError("Endereço"));
+
+    // Normalização para comparação de UUIDs
+    const ownerId = String(address.userId).trim().toLowerCase();
+    const requesterId = String(userId).trim().toLowerCase();
+
+    if (ownerId !== requesterId) {
+      return left(new NotAllowedError("Este endereço não pertence ao usuário informado."));
     }
 
-    // 3. Segurança: Validar se o endereço realmente pertence ao usuário que está tentando defini-lo como padrão
-    // Isso evita que um usuário defina o endereço de outro como seu padrão via API
-    if (address.userId !== userId) {
-      throw new Error("Este endereço não pertence ao usuário informado.");
-    }
+    await this.userRepository.updateDefaultAddress(userId, addressId);
 
-    // 4. Executar a atualização do ponteiro no banco de dados
-    // Aqui chamamos o método que você criou no UserRepository
-    const updatedUser = await this.userRepository.updateDefaultAddress(userId, addressId);
-
-    return updatedUser;
+    return right(null);
   }
 }

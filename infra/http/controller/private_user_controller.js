@@ -99,26 +99,23 @@ export class PrivateUserController {
   }
 
   async definirEnderecoPadrao(req, res) {
-    const { addressId } = req.body;
-    const userId = req.user.id; // ID vindo do token JWT via middleware
+  const userId = req.user.id;
+  const { addressId } = req.body;
 
-    if (!addressId) {
-      return res.status(400).json({ message: "O addressId é obrigatório." });
-    }
+  if (!addressId) {
+    return res.status(400).json({ message: "addressId é obrigatório" });
+  }
 
-    // Chama o Use Case injetado na factory
-    const result = await this.useCases.setDefaultAddress.execute({
-      userId,
-      addressId
-    });
+  const result = await this.useCases.setDefaultAddress.execute({ 
+    userId, 
+    addressId 
+  });
 
-    // Tratamento de erro seguindo o padrão isLeft()
-    if (result.isLeft()) {
-      throw result.value;
-    }
+  if (result.isLeft()) {
+    const error = result.value;
+    return res.status(error.statusCode || 400).json({ message: error.message });
+  }
 
-    return res.status(200).json({ 
-      message: "Endereço padrão atualizado com sucesso." 
-    });
+  return res.status(200).json({ message: "Endereço padrão atualizado com sucesso" });
   }
 }

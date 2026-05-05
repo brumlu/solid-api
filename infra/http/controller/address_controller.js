@@ -2,19 +2,20 @@ export class AddressController {
   constructor(useCases) {
     this.useCases = useCases;
 
-    // Auto-bind de todos os métodos para garantir que o 'this' funcione nas rotas
+    // Auto-bind de todos os métodos
     this.adicionar = this.adicionar.bind(this);
     this.listarMeusEnderecos = this.listarMeusEnderecos.bind(this);
     this.deletar = this.deletar.bind(this);
     this.buscarEnderecoPadrao = this.buscarEnderecoPadrao.bind(this);
+    this.buscarPorId = this.buscarPorId.bind(this);
+    this.definirEnderecoPadrao = this.definirEnderecoPadrao.bind(this);
   }
 
   /**
    * POST /addresses
-   * Cadastra um novo endereço para o usuário autenticado
    */
   async adicionar(req, res) {
-    const userId = req.user.id; // Extraído do middleware de autenticação
+    const userId = req.user.id;
     const { 
       street, 
       number, 
@@ -38,7 +39,10 @@ export class AddressController {
       isDefault
     });
 
-    if (result.isLeft()) throw result.value;
+    if (result.isLeft()) {
+      const error = result.value;
+      return res.status(error.statusCode || 400).json({ message: error.message });
+    }
 
     return res.status(201).json({
       message: "Endereço cadastrado com sucesso",
@@ -48,14 +52,18 @@ export class AddressController {
 
   /**
    * GET /addresses
-   * Lista todos os endereços do usuário logado
    */
   async listarMeusEnderecos(req, res) {
     const userId = req.user.id;
 
     const result = await this.useCases.listAddresses.execute(userId);
 
-    // No caso de listagem, se não houver erro, retornamos a lista (mesmo que vazia)
+    // Como o ListUserAddressesUseCase agora retorna Either
+    if (result.isLeft()) {
+      const error = result.value;
+      return res.status(error.statusCode || 400).json({ message: error.message });
+    }
+
     return res.status(200).json({
       message: "Lista de endereços recuperada",
       addresses: result.value
@@ -64,14 +72,16 @@ export class AddressController {
 
   /**
    * GET /addresses/default
-   * Busca especificamente o endereço marcado como padrão
    */
   async buscarEnderecoPadrao(req, res) {
     const userId = req.user.id;
 
     const result = await this.useCases.getDefaultAddress.execute(userId);
 
-    if (result.isLeft()) throw result.value;
+    if (result.isLeft()) {
+      const error = result.value;
+      return res.status(error.statusCode || 404).json({ message: error.message });
+    }
 
     return res.status(200).json({
       address: result.value
@@ -79,36 +89,59 @@ export class AddressController {
   }
 
   /**
+   * PATCH /users/default-address
+   */
+  async definirEnderecoPadrao(req, res) {
+    const userId = req.user.id;
+    const { addressId } = req.body;
+
+    const result = await this.useCases.setDefaultAddress.execute({ userId, addressId });
+
+    if (result.isLeft()) {
+      const error = result.value;
+      return res.status(error.statusCode || 400).json({ message: error.message });
+    }
+
+    return res.status(200).json({
+      message: "Endereço padrão atualizado com sucesso"
+    });
+  }
+
+  /**
    * DELETE /addresses/:id
-   * Remove um endereço específico após validar a posse
    */
   async deletar(req, res) {
     const userId = req.user.id;
     const { id: addressId } = req.params;
+    const userRole = req.user.role;
 
-    const result = await this.useCases.deleteAddress.execute(userId, addressId);
+    const result = await this.useCases.deleteAddress.execute({ 
+      userId, 
+      addressId, 
+      userRole 
+    });
 
-    if (result.isLeft()) throw result.value;
+    if (result.isLeft()) {
+      const error = result.value;
+      return res.status(error.statusCode || 400).json({ message: error.message });
+    }
 
     return res.status(200).json({
       message: "Endereço removido com sucesso"
     });
   }
 
-
   /**
    * GET /addresses/:id
-   * Busca um endereço específico por ID. 
-   * O middleware isOwnerOrAdmin garante que apenas o dono ou admin cheguem aqui.
    */
   async buscarPorId(req, res) {
     const { id: addressId } = req.params;
 
-    // Chamamos o Use Case de busca
     const result = await this.useCases.getAddressById.execute(addressId);
 
     if (result.isLeft()) {
-      throw result.value; // Lança erro de "Não encontrado" ou similar
+      const error = result.value;
+      return res.status(error.statusCode || 404).json({ message: error.message });
     }
 
     return res.status(200).json({
