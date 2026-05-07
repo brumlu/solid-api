@@ -21,6 +21,7 @@ model Users {
 
   // FK opcional corrigida para @db.Uuid
   defaultAddressId String?  @unique @map("default_address_id") @db.Uuid
+  defaultAddress   Address? @relation("UserDefaultAddress", fields: [defaultAddressId], references: [id])
 
   addresses        Address[]
 
@@ -42,6 +43,7 @@ model Address {
   // FK corrigida para @db.Uuid
   userId       String   @db.Uuid
   user         Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  defaultedBy Users? @relation("UserDefaultAddress")
 
   @@map("addresses")
 }

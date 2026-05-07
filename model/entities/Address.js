@@ -23,5 +23,7 @@ export class Address {
         this.userId = userId;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+
+    if (!street) throw new Error("Street is required");
     }
 }

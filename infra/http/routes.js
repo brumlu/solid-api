@@ -67,14 +67,14 @@ router.patch('/products/:id', validate(updateProductSchema), auth, checkPermissi
 // Criar endereço
 router.post('/addresses', auth, validate(createAddressSchema), addressController.adicionar);
 
+// Buscar o padrão atual
+router.get('/addresses/default', auth, addressController.buscarEnderecoPadrao);
+
 // Admin vê endereço de usuário específico
 router.get('/addresses/:id', auth, isOwnerOrAdmin, addressController.buscarPorId);
 
 // Listar todos do usuário
 router.get('/addresses', auth, addressController.listarMeusEnderecos);
-
-// Buscar o padrão atual
-router.get('/addresses/default', auth, addressController.buscarEnderecoPadrao);
 
 // Deletar endereço
 router.delete('/addresses/:id', auth, isOwnerOrAdmin, addressController.deletar);
