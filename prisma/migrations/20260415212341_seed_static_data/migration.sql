@@ -61,6 +61,24 @@ CREATE TABLE "products" (
     CONSTRAINT "products_pkey" PRIMARY KEY ("id")
 );
 
+CREATE TABLE "carts" (
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "user_id" UUID NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "carts_pkey" PRIMARY KEY ("id")
+);
+
+CREATE TABLE "cart_items" (
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "cart_id" UUID NOT NULL,
+    "product_id" UUID NOT NULL,
+    "quantity" INTEGER NOT NULL DEFAULT 1,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "cart_items_pkey" PRIMARY KEY ("id")
+);
+
 -- 2. ÍNDICES E RELAÇÕES
 CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 CREATE UNIQUE INDEX "users_default_address_id_key" ON "users"("default_address_id");
@@ -86,6 +104,21 @@ FOREIGN KEY ("roleId") REFERENCES "roles"("id") ON DELETE CASCADE ON UPDATE CASC
 
 ALTER TABLE "role_permissions" ADD CONSTRAINT "role_permissions_permissionId_fkey" 
 FOREIGN KEY ("permissionId") REFERENCES "permissions"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- Índice Único: 1 usuário = 1 carrinho
+CREATE UNIQUE INDEX "carts_user_id_key" ON "carts"("user_id");
+
+-- FK: Carrinho -> Usuário
+ALTER TABLE "carts" ADD CONSTRAINT "carts_user_id_fkey" 
+FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- FK: Item do Carrinho -> Carrinho
+ALTER TABLE "cart_items" ADD CONSTRAINT "cart_items_cart_id_fkey" 
+FOREIGN KEY ("cart_id") REFERENCES "carts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- FK: Item do Carrinho -> Produto
+ALTER TABLE "cart_items" ADD CONSTRAINT "cart_items_product_id_fkey" 
+FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- 3. SEED DATA
 -- Permissões
@@ -116,4 +149,23 @@ ON CONFLICT DO NOTHING;
 INSERT INTO "role_permissions" ("roleId", "permissionId")
 SELECT r.id, p.id FROM "roles" r, "permissions" p 
 WHERE r.name = 'Default' AND p.name IN ('USER_READ', 'USER_UPDATE', 'USER_DELETE', 'PRODUCT_READ')
+ON CONFLICT DO NOTHING;
+
+-- Adicionando permissões de Carrinho
+INSERT INTO "permissions" ("name", "description") VALUES 
+('CART_ADD', 'Permissão para adicionar itens ao carrinho'),
+('CART_READ', 'Permissão para visualizar o próprio carrinho'),
+('CART_DELETE', 'Permissão para remover itens do carrinho')
+ON CONFLICT ("name") DO NOTHING;
+
+-- Atribuindo ao usuário 'Default'
+INSERT INTO "role_permissions" ("roleId", "permissionId")
+SELECT r.id, p.id FROM "roles" r, "permissions" p 
+WHERE r.name = 'Default' AND p.name IN ('CART_ADD', 'CART_READ', 'CART_DELETE')
+ON CONFLICT DO NOTHING;
+
+-- Atribuindo ao 'ADMIN' (Admin também pode comprar)
+INSERT INTO "role_permissions" ("roleId", "permissionId") 
+SELECT r.id, p.id FROM "roles" r, "permissions" p 
+WHERE r.name = 'ADMIN' AND p.name IN ('CART_ADD', 'CART_READ', 'CART_DELETE')
 ON CONFLICT DO NOTHING;

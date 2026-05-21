@@ -25,6 +25,8 @@ model Users {
 
   addresses        Address[]
 
+  cart Cart? // Um usuário pode ter um carrinho
+
   @@map("users")
 }
 
@@ -56,6 +58,8 @@ model Products {
   stock       Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  cartItems CartItem[] // Um produto pode estar em vários carrinhos
 
   @@map("products")
 }
@@ -91,4 +95,35 @@ model RolePermission {
 
   @@id([roleId, permissionId])
   @@map("role_permissions")
+}
+
+model Cart {
+  id        String     @id @default(uuid()) @db.Uuid
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  // Relacionamento 1:1 com Usuário (Um usuário tem um carrinho)
+  userId    String     @unique @map("user_id") @db.Uuid
+  user      Users      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  items     CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id        String   @id @default(uuid()) @db.Uuid
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relacionamento com o Carrinho
+  cartId    String   @map("cart_id") @db.Uuid
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+
+  // Relacionamento com o Produto
+  productId String   @map("product_id") @db.Uuid
+  product   Products @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@map("cart_items")
 }

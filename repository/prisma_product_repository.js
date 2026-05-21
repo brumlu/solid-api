@@ -20,12 +20,20 @@ export class ProductRepository {
 
   // --- MÉTODOS DE BUSCA ---
 
-  async findById(id) {
+async findById(id) {
+  try {
+    if (!id || typeof id !== 'string') return null;
+
     const productData = await prisma.products.findUnique({ 
-      where: { id: (id) } 
+      where: { id } // O id já é uma string UUID
     });
+
     return this.#mapToEntity(productData);
+  } catch (error) {
+    // Se o banco rejeitar o ID, apenas dizemos que não foi encontrado
+    return null; 
   }
+}
 
   async findAll() {
     const products = await prisma.products.findMany();
