@@ -39,7 +39,7 @@ export class PublicUserController {
     res.cookie('api_token', token, {
     httpOnly: true,    // Impede que o JavaScript do front-end acesse o cookie (Proteção XSS)
     secure: process.env.NODE_ENV === 'production', // Só envia via HTTPS em produção
-    sameSite: 'strict', // Impede que o cookie seja enviado em requisições cross-site (Proteção CSRF)
+    sameSite: 'lax', 
     maxAge: 1000 * 60 * 60 * 24, // Expira em 1 dia (ajuste conforme sua necessidade)
     path: '/',         // Disponível em todas as rotas
     });

@@ -38,6 +38,8 @@ router.delete('/users/:id', auth, isOwnerOrAdmin, privateUserController.deletar)
 router.post('/logout', auth, (req, res) => privateUserController.logout(req, res));
 router.patch('/users/default-address', auth, privateUserController.definirEnderecoPadrao);
 
+router.get('/me', auth, (req, res) => privateUserController.me(req, res));
+
 // --- ROTAS PRIVADAS: PRODUTOS ---
 router.get('/products', auth, checkPermission('PRODUCT_READ'), productController.listar);
 router.post('/products', validate(createProductSchema), auth, checkPermission('PRODUCT_CREATE'), productController.criar);

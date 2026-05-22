@@ -10,7 +10,8 @@ import {
   UpdateUserPassword, 
   DeleteUser, 
   ChangeUserRole,
-  SetDefaultAddressUseCase
+  SetDefaultAddressUseCase,
+  GetUserProfile
 } from '../../usecase/user/user_usecase.js';
 
 import { PublicUserController } from '../http/controller/public_user_controller.js';
@@ -42,7 +43,8 @@ export const makePrivateUserController = () => {
     updatePassword: new UpdateUserPassword(userRepository, hashProvider),
     deleteUser: new DeleteUser(userRepository),
     changeRole: new ChangeUserRole(userRepository),
-    setDefaultAddress: new SetDefaultAddressUseCase(userRepository, addressRepository)
+    setDefaultAddress: new SetDefaultAddressUseCase(userRepository, addressRepository),
+    getUserProfile: new GetUserProfile(userRepository)
   };
 
   return new PrivateUserController(useCases, masterKey);

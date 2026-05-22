@@ -11,6 +11,7 @@ export class PrivateUserController {
     this.alterarCargo = this.alterarCargo.bind(this);
     this.setupAdmin = this.setupAdmin.bind(this);
     this.definirEnderecoPadrao = this.definirEnderecoPadrao.bind(this);
+    this.me = this.me.bind(this);
   }
 
   async listar(req, res) {
@@ -118,4 +119,19 @@ export class PrivateUserController {
 
   return res.status(200).json({ message: "Endereço padrão atualizado com sucesso" });
   }
+
+async me(req, res) {
+  // As permissões já vêm do token decodificado pelo middleware 'auth'
+  // Você não precisa nem chamar o banco de dados se quiser apenas as permissões
+  const { id, permissions } = req.user; 
+  
+  // Opcional: Se quiser buscar nome/email também, pode manter a chamada ao banco
+  const user = await this.useCases.getUserProfile.execute(id);
+
+  return res.status(200).json({
+    name: user.name,
+    email: user.email,
+    permissions: permissions // <--- É isso que o front precisa!
+  });
+}
 }

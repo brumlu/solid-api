@@ -7,7 +7,12 @@ import cookieParser from 'cookie-parser';
 
 export const app = express();
 app.use(express.json());
-app.use(cors());
+
+app.use(cors({
+  origin: 'http://localhost:5173', // O endereço exato do seu front-end
+  credentials: true,              // Isso é o que permite o envio do cookie
+}));
+
 app.use(cookieParser());
 
 app.use(router);

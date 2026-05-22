@@ -31,7 +31,7 @@ const auth = (req, res, next) => {
 
     } catch (err) {
         // Se o token for inválido ou expirar, é uma boa prática limpar o cookie do navegador
-        res.clearCookie('safewoman_token');
+        res.clearCookie('api_token');
         return res.status(403).json({ message: 'Acesso negado: Token inválido ou expirado.' });
     }
 };
