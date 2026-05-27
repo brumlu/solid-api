@@ -1,12 +1,10 @@
 import { CartRepository } from '../../repository/prisma_cart_repository.js';
 import { ProductRepository } from '../../repository/prisma_product_repository.js';
-
-import { 
-  AddProductToCartUseCase, 
-  GetUserCartUseCase, 
-  RemoveItemFromCartUseCase 
-} from '../../usecase/cart/cart_usecase.js';
-
+import {
+  AddProductToCartUseCase,
+  GetUserCartUseCase,
+  RemoveItemFromCartUseCase
+} from '../../usecase/cart/index.js';
 import { CartController } from '../http/controller/cart_controller.js';
 
 // Instâncias de Infra (Repositórios)

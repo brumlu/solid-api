@@ -43,7 +43,7 @@ describe('Create Product (Integration)', () => {
       }
     });
 
-    // Realizar o login para capturar o cookie do token
+    // Realizando o login para capturar o cookie
     const loginResponse = await request(app).post('/login').send({
       email: 'admin@teste.com',
       password: 'password123'
@@ -75,7 +75,7 @@ describe('Create Product (Integration)', () => {
     expect(response.body).toHaveProperty('product');
     expect(response.body.product.name).toBe(newProduct.name);
     
-    // Convertendo Decimal (string) para Number para comparação
+    // Convertendo Decimal (string) para Number
     expect(Number(response.body.product.price)).toBe(newProduct.price);
   });
 

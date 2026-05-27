@@ -16,13 +16,11 @@ describe('Add Item to Cart (Integration)', () => {
   };
 
   beforeAll(async () => {
-    // 1. Limpeza do Banco
     await prisma.cartItem.deleteMany();
     await prisma.cart.deleteMany();
     await prisma.products.deleteMany();
     await prisma.users.deleteMany();
 
-    // 2. Setup Role e Usuário
     await prisma.role.upsert({
       where: { name: 'Default' },
       update: {},
@@ -39,7 +37,6 @@ describe('Add Item to Cart (Integration)', () => {
     userCookie = loginRes.header['set-cookie'];
     userId = loginRes.body.user?.id || loginRes.body.id;
 
-    // 3. Criar produto para cenários de regra de negócio
     testProduct = await prisma.products.create({
       data: {
         name: 'Teclado Mecânico',
@@ -61,7 +58,7 @@ describe('Add Item to Cart (Integration)', () => {
     it('should return 400 when productId is not a valid UUID', async () => {
       const response = await request(app)
         .post('/cart/items')
-        .set('Cookie', userCookie) // Autenticado
+        .set('Cookie', userCookie)
         .send({ productId: 'id-invalido-123', quantity: 2 });
 
       expect(response.status).toBe(400);
@@ -81,7 +78,6 @@ describe('Add Item to Cart (Integration)', () => {
 
   describe('Business Rules', () => {
     it('não deve adicionar ao carrinho se o estoque for insuficiente', async () => {
-      // Criamos um produto com estoque minúsculo especificamente para este teste
       const lowStockProduct = await prisma.products.create({
         data: { name: 'Produto Estoque Baixo', price: 10.0, stock: 1 }
       });

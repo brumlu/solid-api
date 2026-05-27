@@ -10,20 +10,17 @@ describe('GetUserCart (Integration)', () => {
   const password = 'password123';
 
   beforeAll(async () => {
-    // 1. Limpeza do Banco
     await prisma.cartItem.deleteMany();
     await prisma.cart.deleteMany();
     await prisma.products.deleteMany();
     await prisma.users.deleteMany();
 
-    // 2. Setup Role
     await prisma.role.upsert({
       where: { name: 'Default' },
       update: {},
       create: { name: 'Default' }
     });
 
-    // 3. Registro e Login
     const testUser = { 
       name: 'User', 
       email: `test.${randomUUID()}@teste.com`, 
@@ -59,18 +56,15 @@ describe('GetUserCart (Integration)', () => {
   });
 
   it('deve retornar o carrinho com os itens adicionados corretamente', async () => {
-    // Setup: Cria produto para teste
     const product = await prisma.products.create({
       data: { name: 'Notebook', price: 3000.0, stock: 10 }
     });
 
-    // Ação: Adiciona item
     await request(app)
       .post('/cart/items')
       .set('Cookie', userCookie)
       .send({ productId: product.id, quantity: 1 });
 
-    // Ação: Busca o carrinho
     const response = await request(app)
       .get('/cart')
       .set('Cookie', userCookie);

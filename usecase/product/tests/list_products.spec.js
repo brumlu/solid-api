@@ -5,17 +5,16 @@ import { app } from '../../../cmd/main.js';
 import prisma from '../../../infra/database/prisma.js';
 
 describe('List Products (Integration)', () => {
-  let userCookie; // Agora armazenamos o cookie de sessão
+  let userCookie;
 
   beforeAll(async () => {
-    // 1. Limpeza total (Ordem: filhos -> pais)
     await prisma.rolePermission.deleteMany();
     await prisma.products.deleteMany();
     await prisma.users.deleteMany();
     await prisma.role.deleteMany();
     await prisma.permission.deleteMany();
 
-    // 2. Criar Role 'Default' com a permissão PRODUCT_READ
+    // Criar Role Default com permissão de leitura de produtos
     const defaultRole = await prisma.role.create({
       data: {
         name: 'Default',
@@ -33,7 +32,7 @@ describe('List Products (Integration)', () => {
       }
     });
 
-    // 3. Criar alguns produtos para a listagem
+    // Criando alguns produtos para a listagem
     await prisma.products.createMany({
       data: [
         { name: 'Mouse Gamer', price: 150.00, stock: 10 },
@@ -42,7 +41,6 @@ describe('List Products (Integration)', () => {
       ]
     });
 
-    // 4. Criar um usuário comum e realizar o login para capturar o cookie
     const hashedPassword = await bcrypt.hash('password123', 8);
     await prisma.users.create({
       data: {
@@ -58,15 +56,14 @@ describe('List Products (Integration)', () => {
       password: 'password123'
     });
 
-    // Capturamos o array de cookies do cabeçalho da resposta
     userCookie = loginResponse.header['set-cookie'];
   });
 
   it('deve ser capaz de listar todos os produtos cadastrados', async () => {
     const response = await request(app)
       .get('/products')
-      .set('Cookie', userCookie); // Enviamos o cookie em vez do header Authorization
-
+      .set('Cookie', userCookie);
+      
     expect(response.status).toBe(200);
     expect(Array.isArray(response.body.products)).toBe(true);
     expect(response.body.products.length).toBe(3);

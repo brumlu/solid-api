@@ -10,14 +10,12 @@ describe('Delete Product (Integration)', () => {
   let productIdToDelete;
 
   beforeAll(async () => {
-    // 1. Limpeza total (Ordem correta: do filho para o pai)
     await prisma.rolePermission.deleteMany();
     await prisma.products.deleteMany();
     await prisma.users.deleteMany();
     await prisma.role.deleteMany();
     await prisma.permission.deleteMany();
 
-    // 2. Criar Role ADMIN (com delete) e Role Default (sem delete)
     const adminRole = await prisma.role.create({
       data: {
         name: 'ADMIN',
@@ -35,13 +33,11 @@ describe('Delete Product (Integration)', () => {
       data: { name: 'Default' }
     });
 
-    // 3. Criar um produto para ser deletado
     const product = await prisma.products.create({
       data: { name: 'Produto para Deletar', price: 50.00, stock: 1 }
     });
     productIdToDelete = product.id;
 
-    // 4. Criar Usuários e Capturar Cookies
     const hashedPassword = await bcrypt.hash('password123', 8);
 
     // Login Admin
@@ -62,11 +58,11 @@ describe('Delete Product (Integration)', () => {
   it('não deve permitir que um usuário sem permissão delete um produto', async () => {
     const response = await request(app)
       .delete(`/products/${productIdToDelete}`)
-      .set('Cookie', userCookie); // Uso simplificado do Cookie
+      .set('Cookie', userCookie);
 
     expect(response.status).toBe(403); 
     
-    // Garantir que o produto ainda existe no banco
+    // Garantindo que o produto ainda existe no banco
     const productExists = await prisma.products.findUnique({ where: { id: productIdToDelete } });
     expect(productExists).not.toBeNull();
   });
@@ -74,7 +70,7 @@ describe('Delete Product (Integration)', () => {
   it('deve ser capaz de deletar um produto como admin', async () => {
     const response = await request(app)
       .delete(`/products/${productIdToDelete}`)
-      .set('Cookie', adminCookie); // Uso simplificado do Cookie
+      .set('Cookie', adminCookie);
 
     expect(response.status).toBe(200);
     expect(response.body.message).toMatch(/sucesso/i);

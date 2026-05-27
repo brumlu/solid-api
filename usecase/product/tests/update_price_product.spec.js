@@ -5,18 +5,16 @@ import { app } from '../../../cmd/main.js';
 import prisma from '../../../infra/database/prisma.js';
 
 describe('Update Product Price (Integration)', () => {
-  let adminCookie; // Substituído de adminToken para adminCookie
+  let adminCookie;
   let productId;
 
   beforeAll(async () => {
-    // 1. Limpeza total para evitar conflitos (Filhos para Pais)
     await prisma.rolePermission.deleteMany();
     await prisma.products.deleteMany();
     await prisma.users.deleteMany();
     await prisma.role.deleteMany();
     await prisma.permission.deleteMany();
 
-    // 2. Criar Role ADMIN com permissão necessária
     const adminRole = await prisma.role.create({
       data: {
         name: 'ADMIN',
@@ -33,7 +31,6 @@ describe('Update Product Price (Integration)', () => {
       }
     });
 
-    // 3. Criar produto inicial
     const product = await prisma.products.create({
       data: {
         name: 'Teclado Gamer',
@@ -43,7 +40,6 @@ describe('Update Product Price (Integration)', () => {
     });
     productId = product.id;
 
-    // 4. Criar Usuário Admin e realizar login para capturar o Cookie
     const hashedPassword = await bcrypt.hash('password123', 8);
     await prisma.users.create({
       data: {
@@ -59,7 +55,6 @@ describe('Update Product Price (Integration)', () => {
       password: 'password123'
     });
 
-    // Captura o cabeçalho 'set-cookie' enviado pela API
     adminCookie = loginResponse.header['set-cookie'];
   });
 
@@ -68,7 +63,7 @@ describe('Update Product Price (Integration)', () => {
 
     const response = await request(app)
       .patch(`/products/${productId}/price`)
-      .set('Cookie', adminCookie) // Enviando o cookie em vez do Bearer token
+      .set('Cookie', adminCookie)
       .send({ price: newPrice });
 
     expect(response.status).toBe(200);
