@@ -2,7 +2,7 @@ import { it, describe, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import { app } from '../../../cmd/main.js';
 import prisma from '../../../infra/database/prisma.js';
-import { SetDefaultAddressUseCase } from '../user_usecase.js'
+import { SetDefaultAddressUseCase } from '../index.js';
 import { UserRepository } from '../../../repository/prisma_user_repository.js';
 import { AddressRepository } from '../../../repository/prisma_address_repository.js';
 

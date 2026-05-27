@@ -7,7 +7,7 @@ import {
   NotAllowedError
 } from '../../model/errors/AppError.js';
 
-export class UpdateProductPrice {
+export class UpdateProductPriceUseCase {
   constructor(productRepository) { 
     this.productRepository = productRepository; 
   }

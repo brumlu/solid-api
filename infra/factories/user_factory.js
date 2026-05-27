@@ -1,18 +1,17 @@
 import { UserRepository } from '../../repository/prisma_user_repository.js';
 import { HashProvider } from '../providers/hash_provider.js';
 import { TokenProvider } from '../providers/token_provider.js';
-
-import { 
-  CreateUser, 
-  LoginUser, 
-  ListUsers, 
-  UpdateUser, 
-  UpdateUserPassword, 
-  DeleteUser, 
-  ChangeUserRole,
+import {
+  CreateUserUseCase,
+  LoginUserUseCase,
+  ListUsersUseCase,
+  UpdateUserUseCase,
+  UpdateUserPasswordUseCase,
+  DeleteUserUseCase,
+  ChangeUserRoleUseCase,
   SetDefaultAddressUseCase,
-  GetUserProfile
-} from '../../usecase/user/user_usecase.js';
+  GetUserProfileUseCase
+} from '../../usecase/user/index.js';
 
 import { PublicUserController } from '../http/controller/public_user_controller.js';
 import { PrivateUserController } from '../http/controller/private_user_controller.js';
@@ -26,8 +25,8 @@ const addressRepository = new AddressRepository();
 
 export const makePublicUserController = () => {
   // Injeção nos casos de uso públicos
-  const createUserUseCase = new CreateUser(userRepository, hashProvider);
-  const loginUserUseCase = new LoginUser(userRepository, hashProvider, tokenProvider);
+  const createUserUseCase = new CreateUserUseCase(userRepository, hashProvider);
+  const loginUserUseCase = new LoginUserUseCase(userRepository, hashProvider, tokenProvider);
 
   // Retorna o controller pronto
   return new PublicUserController(createUserUseCase, loginUserUseCase);
@@ -38,13 +37,13 @@ export const makePrivateUserController = () => {
 
   // Agrupamento de casos de uso privados
   const useCases = {
-    listUsers: new ListUsers(userRepository),
-    updateUser: new UpdateUser(userRepository),
-    updatePassword: new UpdateUserPassword(userRepository, hashProvider),
-    deleteUser: new DeleteUser(userRepository),
-    changeRole: new ChangeUserRole(userRepository),
+    listUsers: new ListUsersUseCase(userRepository),
+    updateUser: new UpdateUserUseCase(userRepository),
+    updatePassword: new UpdateUserPasswordUseCase(userRepository, hashProvider),
+    deleteUser: new DeleteUserUseCase(userRepository),
+    changeRole: new ChangeUserRoleUseCase(userRepository),
     setDefaultAddress: new SetDefaultAddressUseCase(userRepository, addressRepository),
-    getUserProfile: new GetUserProfile(userRepository)
+    getUserProfile: new GetUserProfileUseCase(userRepository)
   };
 
   return new PrivateUserController(useCases, masterKey);
