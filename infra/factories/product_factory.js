@@ -1,13 +1,12 @@
 import { ProductRepository } from '../../repository/prisma_product_repository.js';
-import { 
-  CreateProduct, 
-  ListProducts, 
-  UpdateProduct, 
+import {
+  CreateProduct,
+  ListProducts,
+  UpdateProduct,
   DeleteProduct,
   UpdateProductStock,
   UpdateProductPrice
-} from '../../usecase/product/product_usecase.js';
-
+} from '../../usecase/product/index.js';
 import { ProductController } from '../http/controller/product_controller.js';
 
 // Instância de Infra (Compartilhada)

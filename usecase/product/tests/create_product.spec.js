@@ -1,6 +1,6 @@
 import { it, describe, expect, beforeAll } from 'vitest';
 import request from 'supertest';
-import bcrypt from 'bcrypt'; // Ou o seu provedor de hash
+import bcrypt from 'bcrypt';
 import { app } from '../../../cmd/main.js';
 import prisma from '../../../infra/database/prisma.js';
 
@@ -8,14 +8,12 @@ describe('Create Product (Integration)', () => {
   let authCookie;
 
   beforeAll(async () => {
-    // 1. Limpeza total (Respeitando a hierarquia do seu schema.prisma)
     await prisma.rolePermission.deleteMany();
     await prisma.products.deleteMany();
     await prisma.users.deleteMany();
     await prisma.role.deleteMany();
     await prisma.permission.deleteMany();
 
-    // 2. Criar a Role ADMIN e a Permissão PRODUCT_CREATE
     const adminRole = await prisma.role.create({
       data: {
         name: 'ADMIN',
@@ -33,8 +31,7 @@ describe('Create Product (Integration)', () => {
       }
     });
 
-    // 3. Criar o Usuário Administrador diretamente no banco
-    // Geramos um hash real para que o LoginUserUseCase não rejeite a senha
+    // Criar o Usuário Administrador diretamente no banco
     const hashedPassword = await bcrypt.hash('password123', 8);
 
     await prisma.users.create({
@@ -46,7 +43,7 @@ describe('Create Product (Integration)', () => {
       }
     });
 
-    // 4. Realizar o login para capturar o Bearer Token
+    // Realizar o login para capturar o cookie do token
     const loginResponse = await request(app).post('/login').send({
       email: 'admin@teste.com',
       password: 'password123'
