@@ -3,7 +3,7 @@ import prisma from '../../../infra/database/prisma.js'
 import request from 'supertest';
 import { app } from '../../../cmd/main.js'
 import { AddressRepository } from '../../../repository/prisma_address_repository.js';
-import { AddAddressUseCase } from '../../../usecase/address/address_usecase.js';
+import { AddAddressUseCase } from '../../../usecase/address/index.js';
 import { UserRepository } from '../../../repository/prisma_user_repository.js';
 import { randomUUID } from 'node:crypto';
 
@@ -12,7 +12,7 @@ describe('AddAddress (Use Case & Route POST)', () => {
   let userRepository;
   let sut;
   let userId;
-  let userCookie; // Armazenará o cookie para os testes de rota
+  let userCookie;
 
   const testUser = {
     name: 'Luca Address Test',
@@ -21,7 +21,6 @@ describe('AddAddress (Use Case & Route POST)', () => {
   };
 
   beforeAll(async () => {
-    // 1. Limpeza do banco
     await prisma.address.deleteMany();
     await prisma.users.deleteMany();
 
@@ -31,14 +30,14 @@ describe('AddAddress (Use Case & Route POST)', () => {
       create: { name: 'Default' }
     });
 
-    // 2. Registro do usuário
+    // Registro do usuário
     const registerRes = await request(app)
       .post('/register')
       .send(testUser);
     
     userId = registerRes.body.userId;
 
-    // 3. Login para obter o Cookie (necessário para passar pelo middleware 'auth')
+    // Login para obter o Cookie
     const loginRes = await request(app)
       .post('/login')
       .send({
@@ -48,7 +47,7 @@ describe('AddAddress (Use Case & Route POST)', () => {
     
     userCookie = loginRes.header['set-cookie'];
 
-    // 4. Instância dos repositórios e Use Case
+    // Instância dos repositórios e Use Case
     addressRepository = new AddressRepository();
     userRepository = new UserRepository();
     sut = new AddAddressUseCase(addressRepository, userRepository);
@@ -60,7 +59,7 @@ describe('AddAddress (Use Case & Route POST)', () => {
     await prisma.$disconnect();
   });
 
-  // --- TESTES DO USE CASE (Lógica Pura) ---
+  // --- TESTES DO USE CASE ---
 
   it('deve persistir um novo endereço vinculado ao usuário via Use Case', async () => {
     const addressData = {
@@ -80,7 +79,7 @@ describe('AddAddress (Use Case & Route POST)', () => {
     expect(result.value).toHaveProperty('id');
   });
 
-  // --- TESTES DA ROTA (POST /addresses) ---
+  // --- TESTES DA ROTA ---
 
   it('POST /addresses - deve criar um novo endereço via ROTA HTTP', async () => {
     const addressData = {
@@ -99,7 +98,7 @@ describe('AddAddress (Use Case & Route POST)', () => {
       .set('Cookie', userCookie) // Autenticação aqui
       .send(addressData);
 
-    // Validações baseadas no seu controller (Status 201 e mensagem)
+    // Validações baseadas no controller (Status 201 e mensagem)
     expect(response.status).toBe(201);
     expect(response.body.message).toMatch(/sucesso/i);
     expect(response.body.address).toHaveProperty('id');
@@ -117,7 +116,7 @@ describe('AddAddress (Use Case & Route POST)', () => {
       .post('/addresses')
       .set('Cookie', userCookie)
       .send({
-        street: '', // Rua vazia deve falhar no seu validate(createAddressSchema)
+        street: '', // Rua vazia deve falhar no validate(createAddressSchema)
         zipCode: 'curto'
       });
 

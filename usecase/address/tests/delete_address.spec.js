@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import { app } from '../../../cmd/main.js';
 import prisma from '../../../infra/database/prisma.js';
-import { DeleteAddressUseCase } from '../../../usecase/address/address_usecase.js';
+import { DeleteAddressUseCase } from '../../../usecase/address/index.js';
 import { AddressRepository } from '../../../repository/prisma_address_repository.js';
 import { UserRepository } from '../../../repository/prisma_user_repository.js';
 import { randomUUID } from 'node:crypto';
@@ -73,7 +73,6 @@ describe('Delete Address (Use Case & Route)', () => {
   });
 
   it('DELETE /addresses/:id - deve retornar 404 para endereço inexistente', async () => {
-    // Com o middleware corrigido, ele deve retornar 404 se não achar o ID
     const response = await request(app)
       .delete(`/addresses/${randomUUID()}`)
       .set('Cookie', userCookie);

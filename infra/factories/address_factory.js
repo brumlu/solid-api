@@ -1,14 +1,12 @@
 import { AddressRepository } from '../../repository/prisma_address_repository.js';
 import { UserRepository } from '../../repository/prisma_user_repository.js';
-
-import { 
-  AddAddressUseCase, 
-  ListUserAddressesUseCase, 
+import {
+  AddAddressUseCase,
+  ListUserAddressesUseCase,
   DeleteAddressUseCase,
   GetDefaultAddressUseCase,
   GetAddressByIdUseCase
-} from '../../usecase/address/address_usecase.js';
-
+} from '../../usecase/address/index.js';
 import { AddressController } from '../http/controller/address_controller.js';
 
 // Instâncias de Infra
