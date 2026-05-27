@@ -18,7 +18,6 @@ describe('Set Default Address (Use Case & Route)', () => {
   const testPassword = 'password123';
 
   beforeAll(async () => {
-    // 1. Limpeza e Setup Inicial
     await prisma.address.deleteMany();
     await prisma.users.deleteMany();
     
@@ -28,7 +27,6 @@ describe('Set Default Address (Use Case & Route)', () => {
       create: { name: 'Default' }
     });
 
-    // 2. Criação de Usuário e Login para Rota
     const registerRes = await request(app).post('/register').send({
       name: 'Luca Teste',
       email: testEmail,
@@ -42,7 +40,6 @@ describe('Set Default Address (Use Case & Route)', () => {
     });
     userCookie = loginRes.header['set-cookie'];
 
-    // 3. Criação de um endereço inicial via rota
     const addressRes = await request(app)
       .post('/addresses')
       .set('Cookie', userCookie)
@@ -58,7 +55,6 @@ describe('Set Default Address (Use Case & Route)', () => {
     
     addressId = addressRes.body.id || addressRes.body.address?.id;
 
-    // 4. Instância do Use Case para testes de lógica
     userRepository = new UserRepository();
     addressRepository = new AddressRepository();
     sut = new SetDefaultAddressUseCase(userRepository, addressRepository);
@@ -94,7 +90,7 @@ describe('Set Default Address (Use Case & Route)', () => {
     expect(userInDb.defaultAddressId).toBe(newAddr.id);
   });
 
-  // --- TESTES DA ROTA (PATCH /users/default-address) ---
+  // --- TESTES DA ROTA ---
   it('PATCH /users/default-address - deve definir o endereço padrão via ROTA HTTP', async () => {
     const response = await request(app)
       .patch('/users/default-address')
@@ -135,7 +131,6 @@ describe('Set Default Address (Use Case & Route)', () => {
       .set('Cookie', userCookie)
       .send({ addressId: otherAddress.id });
 
-    // O Use Case retorna NotAllowedError, que o seu controller deve mapear para 403
     expect(response.status).toBe(403);
   });
 

@@ -15,7 +15,6 @@ describe('Update Password (Integration)', () => {
   };
 
   beforeAll(async () => {
-    // 1. Limpeza total
     await prisma.users.deleteMany();
 
     await prisma.role.upsert({
@@ -24,7 +23,6 @@ describe('Update Password (Integration)', () => {
       create: { name: 'Default' }
     });
 
-    // 2. Cadastra o usuário com a senha inicial
     const registerRes = await request(app).post('/register').send({
       name: userCredentials.name,
       email: userCredentials.email,
@@ -33,20 +31,18 @@ describe('Update Password (Integration)', () => {
 
     userId = registerRes.body.userId;
 
-    // 3. Login inicial para obter o Cookie HttpOnly
     const loginRes = await request(app).post('/login').send({
       email: userCredentials.email,
       password: userCredentials.oldPassword
     });
-    
-    // Captura o cabeçalho 'set-cookie' (api_token)
+
     userCookie = loginRes.header['set-cookie'];
   });
 
   it('deve ser capaz de alterar a própria senha usando o ID na rota', async () => {
     const response = await request(app)
       .patch(`/password-update/${userId}`) 
-      .set('Cookie', userCookie) // Enviando o cookie api_token
+      .set('Cookie', userCookie)
       .send({
         password: userCredentials.newPassword 
       });
@@ -64,8 +60,7 @@ describe('Update Password (Integration)', () => {
       });
 
     expect(response.status).toBe(200);
-    
-    // Verifica se o cookie api_token foi enviado na resposta
+
     const cookies = response.header['set-cookie'];
     expect(cookies.find(c => c.includes('api_token'))).toBeDefined();
   });
@@ -83,7 +78,6 @@ describe('Update Password (Integration)', () => {
   });
 
   it('deve retornar 403 se tentar alterar a senha de outro usuário (Segurança)', async () => {
-    // 1. Criar um segundo usuário (Vítima)
     const secondUser = await request(app).post('/register').send({
       name: 'Vítima',
       email: 'vitima@teste.com',
@@ -91,13 +85,11 @@ describe('Update Password (Integration)', () => {
     });
     const secondUserId = secondUser.body.userId;
 
-    // 2. O usuário "Luca" tenta mudar a senha da "Vítima" enviando o SEU cookie
     const response = await request(app)
       .patch(`/password-update/${secondUserId}`)
       .set('Cookie', userCookie)
       .send({ password: 'hackedPassword' });
 
-    // O middleware de autorização (isOwnerOrAdmin) deve barrar
     expect(response.status).toBe(403);
   });
 });

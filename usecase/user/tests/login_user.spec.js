@@ -11,17 +11,14 @@ describe('Login Operations (Integration)', () => {
   };
 
   beforeAll(async () => {
-    // 1. Limpeza do banco
     await prisma.users.deleteMany();
 
-    // 2. Garante a Role Default
     await prisma.role.upsert({
       where: { name: 'Default' },
       update: {},
       create: { name: 'Default' }
     });
 
-    // 3. Cadastra o usuário via rota oficial para garantir o hash da senha
     await request(app)
       .post('/register')
       .send(loginUser);
@@ -36,21 +33,17 @@ describe('Login Operations (Integration)', () => {
       });
 
     expect(response.status).toBe(200);
-    
-    // 1. O corpo da resposta NÃO deve mais conter o token (por segurança)
+
     expect(response.body.token).toBeUndefined();
 
-    // 2. Verificamos se o cookie foi enviado no cabeçalho
     const cookies = response.header['set-cookie'];
     expect(cookies).toBeDefined();
 
-    // 3. Validamos se o cookie específico 'api_token' está lá e contém as flags
     const authCookie = cookies.find(cookie => cookie.includes('api_token'));
     expect(authCookie).toBeDefined();
     expect(authCookie).toMatch(/HttpOnly/);
     expect(authCookie).toMatch(/Path=\//);
-    
-    // Verifica se o valor do token dentro do cookie começa com o padrão JWT (ey...)
+
     expect(authCookie).toMatch(/api_token=ey/);
   });
 
@@ -64,8 +57,7 @@ describe('Login Operations (Integration)', () => {
 
     expect(response.status).toBe(401);
     expect(response.body.message).toMatch(/inválid/i); 
-    
-    // Garante que o cookie NÃO foi enviado em caso de falha
+
     expect(response.header['set-cookie']).toBeUndefined();
   });
 
@@ -77,7 +69,6 @@ describe('Login Operations (Integration)', () => {
         password: 'password123'
       });
 
-    // Segurança: 401 para evitar enumeração de e-mails
     expect(response.status).toBe(401);
     expect(response.header['set-cookie']).toBeUndefined();
   });

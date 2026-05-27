@@ -12,7 +12,6 @@ describe('Change User Role (Integration)', () => {
   let defaultRoleId = null;
 
   beforeAll(async () => {
-    // 1. Limpeza profunda respeitando a hierarquia de FKs
     await prisma.users.deleteMany();
     
     if (prisma.rolePermission) {
@@ -24,12 +23,10 @@ describe('Change User Role (Integration)', () => {
     await prisma.permission.deleteMany();
     await prisma.role.deleteMany();
 
-    // 2. Criar a permissão mestra
     const permAdmin = await prisma.permission.create({
       data: { name: Permissions.ADMIN_ACCESS }
     });
 
-    // 3. Criar a Role ADMIN vinculando a permissão
     const roleAdmin = await prisma.role.create({
       data: {
         name: 'ADMIN',
@@ -42,13 +39,11 @@ describe('Change User Role (Integration)', () => {
     });
     adminRoleId = roleAdmin.id;
 
-    // 4. Criar a Role padrão
     const roleDefault = await prisma.role.create({ 
       data: { name: 'Default' } 
     });
     defaultRoleId = roleDefault.id;
 
-    // 5. Criar o usuário Administrador
     const adminReg = await request(app).post('/register').send({
       name: 'Luca Admin',
       email: 'admin.integracao@teste.com',
@@ -57,13 +52,11 @@ describe('Change User Role (Integration)', () => {
     
     const adminId = adminReg.body.userId;
 
-    // 6. Promover o usuário para ADMIN no banco
     await prisma.users.update({
       where: { id: adminId },
       data: { roleId: adminRoleId }
     });
 
-    // 7. Login do Admin - Capturando o COOKIE HttpOnly
     const loginRes = await request(app).post('/login').send({
       email: 'admin.integracao@teste.com',
       password: 'password123'
@@ -71,7 +64,7 @@ describe('Change User Role (Integration)', () => {
     
     adminCookie = loginRes.header['set-cookie'];
 
-    // 8. Criar o usuário comum (o alvo)
+    // User comum
     const userRes = await request(app).post('/register').send({
       name: 'Usuário Alvo',
       email: 'alvo@teste.com',
@@ -96,7 +89,7 @@ describe('Change User Role (Integration)', () => {
   it('deve permitir que um administrador altere a role de outro usuário', async () => {
     const response = await request(app)
       .patch(`/role-update/${commonUserId}`) 
-      .set('Cookie', adminCookie) // Enviando cookie de admin
+      .set('Cookie', adminCookie)
       .send({
         roleId: adminRoleId 
       });
@@ -112,7 +105,6 @@ describe('Change User Role (Integration)', () => {
   });
 
   it('deve impedir que um usuário sem privilégios tente alterar a própria role (403)', async () => {
-    // Voltamos ele para Default para o teste de segurança
     await prisma.users.update({
       where: { id: commonUserId },
       data: { roleId: defaultRoleId }
