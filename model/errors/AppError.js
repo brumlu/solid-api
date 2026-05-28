@@ -4,14 +4,13 @@ export class AppError extends Error {
     this.statusCode = statusCode;
     this.name = this.constructor.name;
     
-    // Captura onde o erro ocorreu, facilitando muito o debug no terminal do Vitest
+    // Captura onde o erro ocorreu, facilitando o debug no terminal do Vitest
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, this.constructor);
     }
   }
 }
 
-// Suas subclasses estão ótimas, pode manter como estão:
 export class UserAlreadyExistsError extends AppError {
   constructor() { super('Este email já está em uso.', 409); }
 }
