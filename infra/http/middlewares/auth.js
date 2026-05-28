@@ -1,8 +1,8 @@
 import jwt from 'jsonwebtoken';
 
 const auth = (req, res, next) => {
-    // Agora recuperamos o token diretamente do cookie-parser
-    // O nome do cookie deve ser o mesmo que você definiu no res.cookie do login
+    // Token diretamente do cookie-parser
+    // Nome do cookie definido no res.cookie do login
     const token = req.cookies.api_token;
 
     if (!token) {

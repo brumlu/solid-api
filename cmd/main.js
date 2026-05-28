@@ -10,7 +10,7 @@ app.use(express.json());
 
 app.use(cors({
   origin: 'http://localhost:5173', // O endereço exato do seu front-end
-  credentials: true,              // Isso é o que permite o envio do cookie
+  credentials: true,              // Isso é o que permite o envio do cookie e segurança contra CSRF
 }));
 
 app.use(cookieParser());
