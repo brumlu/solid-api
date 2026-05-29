@@ -1,5 +1,5 @@
 import { left, right } from "../../shared/core/Either.js";
-import { 
+import {
   ResourceNotFoundError,
   NotAllowedError,
   AppError
