@@ -40,6 +40,8 @@ Docker e Docker Compose instalados e em execução.
 
 ```docker compose up -d```
 
+**5.** Verifique se o arquivo entrypoint.sh está utilizando a sequência de fim de linha LF ao invés de CRLF.
+
 ## Endpoints
 Abaixo estão listadas as rotas da API, divididas por domínios de responsabilidade e regras de acesso.
 
