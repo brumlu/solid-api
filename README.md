@@ -172,3 +172,20 @@ O projeto possui scripts configurados para rodar testes de integração isolados
 ```npm run test:watch``` Roda o Vitest no modo watch (observação) com o .env.test. Ele fica escutando alterações nos arquivos e reexecuta os testes automaticamente sempre que você salva o código.
 
 ```npm run test:int``` Roda apenas uma execução rápida (vitest run) dos testes apontando para o .env.test, sem as flags pesadas de cobertura ou controle de paralelismo do comando test.
+
+
+Requisitos: Docker, NodeJS
+Opcional: DBeaver
+
+Para rodar:
+npm i
+
+crie o arquivo .env e .env teste utilizando o .env.example como exemplo
+rode esse comando abaixo para gerar uma chave JWT aleatoria
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+verifique se o entrypoint.sh está em LF
+
+npx prisma generate
+
+docker compose up --build
+
