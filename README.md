@@ -173,6 +173,7 @@ O projeto possui scripts configurados para rodar testes de integração isolados
 
 ```npm run test:int``` Roda apenas uma execução rápida (vitest run) dos testes apontando para o .env.test, sem as flags pesadas de cobertura ou controle de paralelismo do comando test.
 
+----
 
 Requisitos: Docker, NodeJS
 Opcional: DBeaver
