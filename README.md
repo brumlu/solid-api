@@ -178,15 +178,22 @@ O projeto possui scripts configurados para rodar testes de integração isolados
 Requisitos: Docker, NodeJS
 Opcional: DBeaver
 
-Para rodar:
-npm i
+## Para rodar:
+```npm i``` 
 
-crie o arquivo .env e .env teste utilizando o .env.example como exemplo
-rode esse comando abaixo para gerar uma chave JWT aleatoria
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-verifique se o entrypoint.sh está em LF
+Crie o arquivo .env e .env teste utilizando o .env.example como exemplo.
 
-npx prisma generate
+Execute o comando node abaixo para gerar uma chave JWT aleatória.
 
-docker compose up --build
+```node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"```
+
+Verifique se o arquivo entrypoint.sh está em LF.
+
+Gere o Prisma Client.
+
+```npx prisma generate```
+
+Construa as imagens Docker para iniciar os containers.
+
+```docker compose up --build```
 
