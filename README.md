@@ -175,9 +175,11 @@ O projeto possui scripts configurados para rodar testes de integração isolados
 
 ----
 
-**Requisitos:** Docker, NodeJS
+## **Requisitos:**
+Docker, NodeJS
 
-**Opcional:** DBeaver
+## **Opcional:**
+DBeaver
 
 ## Para executar o projeto:
 
